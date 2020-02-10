@@ -17,9 +17,12 @@ library(shinyjqui)
 library(shinymanager)
 library(gmailr)
 library(shinyBS)
-#library(dplyr)
+library(dplyr)
 #cnames <- readRDS("Column_names.rds")
 #degrees <- readRDS("Degrees.rds")
+#state_abbr <- read_csv("Book1.csv")
+#saveRDS(state_abbr, "state_abbr.rds")
+state_abbr <- readRDS("state_abbr.rds")
 cips <- readRDS("CIPS.rds")
 alt_title <- readRDS("AltTitle.rds")
 backbone <- readRDS("Backbone.rds")
@@ -34,16 +37,19 @@ aw_degree <- readRDS("AW_Degree.rds")
 epic_columns <- c( "INSTNM", "CIPNAME", "Degree_Name", "OCCNAME",
                   "Entry_Degree", "MedWage")
 
+page1_order <- data.frame(col1 = sample(c("school", "occupation", "degree", "curriculum")), col2 = sample(c(1,2,3,4)))
+
+
 header <- dashboardHeader( title = "E.P.I.C. Planning", titleWidth = 230, uiOutput("logoutbtn"))
 sidebar <- dashboardSidebar(
+  tags$style(".fa-adjust {color:#E87722}"),
   sidebarMenu(id = "tabs",
               menuItem("Welcome", tabName = "welcome"),
-              menuItem("Page 1", tabName = "page1", icon = icon("user")),
+              menuItem("Page 1", tabName = "page1", icon = icon("adjust")),
               menuItem("Page 2", tabName = "page2", icon = icon("user")),
               menuItem("Page 3", tabName = "page3", icon = icon("tasks")),
               menuItem("Page 4", tabName = "page4", icon = icon("tasks")),
               menuItem("Page 5", tabName = "page5", icon = icon("tasks"))
-              
   )
 ) 
 body <- dashboardBody(HTML('<meta name="viewport" content="width=1920">'),
@@ -78,7 +84,6 @@ body <- dashboardBody(HTML('<meta name="viewport" content="width=1920">'),
                   color = "primary"
                 )
               )
-              
               )
             ),
     tabItem(tabName = "page1",
@@ -114,37 +119,37 @@ body <- dashboardBody(HTML('<meta name="viewport" content="width=1920">'),
                 ),
               column(width =2, tags$script(src = "jquery.ui.touch-punch.js"),
               jqui_draggable(
-                div(id = "school_choice",'School',
+                div(id = "school_1",'School',
                     style = 'border-radius:10px; text-align: center;width:110px; height:30px;
                     background-color:#79BBF2; font-size: 150%') ,
                 options = list(containment = "#box_2", scroll = FALSE)
               ),
               jqui_draggable(
-                div(id = "occupation_choice", 'Occupation',
+                div(id = "occupation_1", 'Occupation',
                     style = 'border-radius:10px; text-align: center;width:110px; height:30px;
                     background-color: red; font-size: 150%'),
                 options = list(containment = "#box_2", scroll = FALSE)
               ),
               jqui_draggable(
-                div(id = "curriculum_choice", 'Curriculum',
+                div(id = "curriculum_1", 'Curriculum',
                     style = 'border-radius:10px; text-align: center;width:110px; height:30px;
                     background-color: green; font-size: 150%'),
                 options = list(containment = "#box_2", scroll = FALSE)
               ),
               jqui_draggable(
-                div(id = "degree_choice", 'Degree',
+                div(id = "degree_1", 'Degree',
                     style = 'border-radius:10px; text-align: center;width:110px; height:30px;
                     background-color: gray; font-size: 150%'),
                 options = list(containment = "#box_2", scroll = FALSE)
               ),
               jqui_draggable(
-                div(id = "tuition_choice", 'Tuition', 
+                div(id = "tuition_1", 'Tuition', 
                     style = 'border-radius:10px; text-align: center;width:110px; height:30px;
                     background-color: yellow; font-size: 150%'),
                 options = list(containment = "#box_2", scroll = FALSE)
               ),
               jqui_draggable(
-                div(id = "salary_choice", 'Salary',
+                div(id = "salary_1", 'Salary',
                     style = 'border-radius:10px; text-align: center;width:110px; height:30px;
                     background-color: orange; font-size: 150%'),
                 options = list(containment = "#box_2", scroll = FALSE)
@@ -212,7 +217,7 @@ body <- dashboardBody(HTML('<meta name="viewport" content="width=1920">'),
                 
                 box(width = 2,
                 selectInput(inputId = "residence", label = "State of Residence",
-                            choices = unique(sort(school$STABBR)))
+                            choices = c(None = '', (sort(state_abbr$State))))
                 ),
                 box(width = 2,
                     numericInput(inputId = "min_start_salary", label = "Min Starting Salary",
@@ -223,75 +228,39 @@ body <- dashboardBody(HTML('<meta name="viewport" content="width=1920">'),
                                  value = 50000, min = 0)
                     ),
                 box(width = 3,
-                    textInput(inputId = "alt_temp", label = "Alternate Title")),
-                actionBttn(inputId = "reorder", label = "Reorder")
+                    textInput(inputId = "alt_temp", label = "Alternate Title"))
               ),
               fluidRow(
                 jqui_sortable(div(id = 'choices',
-                                  column(id = '1',
+                                  column(
+                                    id = '1',
                                     width = 3,
-                                    box(
-                                      width = 12,
-                                      height = '180px',
-                                      selectInput(
-                                        inputId = "occupation_epic",
-                                        label = "Occupation",
-                                        choices = occupation$OCCNAME,
-                                        multiple = TRUE
-                                      )
-                                    ),
-                                    box(width = 12,
-                                        uiOutput(outputId = "occupation_choice"))
+                                    uiOutput(outputId = "first_choice1"),
+                                    uiOutput(outputId = "first_choice2")
+                                  ),
+                                  column(
+                                    id = '2',
+                                    width = 3,
+                                    uiOutput(outputId = "second_choice1"),
+                                    uiOutput(outputId = "second_choice2")
+                                    
                                   ), 
-                                  column(id = '2',
+                                  column(
+                                    id = '3',
                                     width = 3,
-                                         box(
-                                           width = 12,
-                                           height = '180px',
-                                           selectInput(
-                                             inputId = "school_epic",
-                                             label = "School",
-                                             choices = school$INSTNM,
-                                             multiple = TRUE
-                                           )
-                                         ),
-                                         box(width = 12,
-                                             uiOutput(outputId = "school_choice"))), 
-                                  column(id = '3',
+                                    uiOutput(outputId = "third_choice1"),
+                                    uiOutput(outputId = "third_choice2")
+                                  ), 
+                                  column(
+                                    id = '4',
                                     width = 3,
-                                         box(
-                                           width = 12,
-                                           height = '180px',
-                                           selectInput(
-                                             inputId = "curriculum_epic",
-                                             label = "Curriculum",
-                                             choices = cips$CIPNAME,
-                                             multiple = TRUE
-                                           )
-                                         ),
-                                         box(width = 12,
-                                             uiOutput(outputId = "curriculum_choice"))), 
-                                  column(id = '4',
-                                    width = 3,
-                                         box(
-                                           width = 12,
-                                           height = '180px',
-                                           selectInput(
-                                             inputId = "degree_epic",
-                                             label = "Degree",
-                                             choices = unique(aw_degree$Degree_Name),
-                                             multiple = TRUE
-                                           )
-                                         ),
-                                         box(width = 12,
-                                             uiOutput(outputId = "degree_choice"))),
+                                    uiOutput(outputId = "fourth_choice1"),
+                                    uiOutput(outputId = "fourth_choice2")
+                                  )
                 )
                 )
               )
             )
-            
-            
-            
     ), 
     tabItem(tabName = "page3",
             fluidPage(
@@ -326,25 +295,17 @@ body <- dashboardBody(HTML('<meta name="viewport" content="width=1920">'),
               fluidRow(jqui_sortable(div(
                 id = 'preferences',
                 column(width = 3,
-                       box(
-                         width = 12,
-                         uiOutput(outputId = "degree_pref")
-                       )),
+                         uiOutput(outputId = "first_choice3")
+                       ),
                 column(width = 3,
-                       box(
-                         width = 12,
-                         uiOutput(outputId = "school_pref")
-                       )),
+                         uiOutput(outputId = "second_choice3")
+                       ),
                 column(width = 3,
-                       box(
-                         width = 12,
-                         uiOutput(outputId = "curriculum_pref")
-                       )),
+                         uiOutput(outputId = "third_choice3")
+                       ),
                 column(width = 3,
-                       box(
-                         width = 12,
-                         uiOutput(outputId = "occupation_pref")
-                       )),
+                         uiOutput(outputId = "fourth_choice3")
+                       )
               ))), 
               fluidRow(
                 column(width = 2,
@@ -352,7 +313,7 @@ body <- dashboardBody(HTML('<meta name="viewport" content="width=1920">'),
                                 width = 12,
                                 actionButton(
                                   inputId = "make_table",
-                                  label = "Show All",
+                                  label = "Begin",
                                   width = '100%'
                                 )
                               )),
@@ -432,12 +393,51 @@ ui <- dashboardPagePlus(header, sidebar, body, skin = "blue")
 
 server <- function(input, output, session) {
   
-  begin_order <- reactive({
-    input$choices_order$id
+  
+  page1_list <- reactive({
+    page1_order <- c(character(), numeric())
+    school <- as.numeric(input$school_1_position$top)
+    school <- round(((-school + 370) / 48.3), 1)
+    page1_order <- rbind(page1_order, c("school", school))
+    degree <- as.numeric(input$degree_1_position$top)
+    degree <- round(((-degree + 370) / 48.3), 1)
+    page1_order <- rbind(page1_order, c("degree", degree))
+    occupation <- as.numeric(input$occupation_1_position$top)
+    occupation <- round(((-occupation + 370) / 48.3), 1)
+    page1_order <- rbind(page1_order, c("occupation", occupation))
+    curriculum <- as.numeric(input$curriculum_1_position$top)
+    curriculum <- round(((-curriculum + 370) / 48.3), 1)
+    page1_order <- rbind(page1_order, c("curriculum", curriculum))
+    orderlist <- page1_order[ order( page1_order[ ,2]), ]
+    
+  }) 
+  first_spot <- reactive({
+    page1_list()[4]
   })
- 
-  output$occupation_choice <- renderUI({
-    tagList(
+  second_spot <- reactive({
+    page1_list()[3]
+  })
+  third_spot <- reactive({
+    page1_list()[2]
+  })
+  fourth_spot <- reactive({
+    page1_list()[1]
+  })
+  occ_temp1 <- renderUI({
+    tagList(box(
+      width = 12,
+      height = '180px',
+      selectInput(
+        inputId = "occupation_epic",
+        label = "Occupation",
+        choices = isolate(occupation$OCCNAME),
+        multiple = TRUE
+      )
+    ))
+  })
+  occ_temp2 <- renderUI({
+    tagList(box(
+      width = 12,
       selectInput(
         inputId = "occ_text",
         label = "",
@@ -446,10 +446,12 @@ server <- function(input, output, session) {
         size = 5,
         width = '100%'
       )
-    )
+    ))
   })
-  output$occupation_pref <- renderUI({
+  occ_temp3 <- renderUI({
     tagList(
+      box(
+        width = 12,
       selectInput(
         inputId = "occupation_preference",
         label = "Occupation",
@@ -457,11 +459,25 @@ server <- function(input, output, session) {
         selectize = FALSE,
         size = 5,
         width = '100%'
-      )
+      ))
     )
   })
-  output$school_choice <- renderUI({
-    tagList(
+  school_temp1 <- renderUI({
+    tagList(box(
+      width = 12,
+      height = '180px',
+      selectInput(
+        inputId = "school_epic",
+        label = "School",
+        choices = isolate(school$INSTNM),
+        multiple = TRUE
+      )
+    ))
+  })
+  
+  school_temp2 <- renderUI({
+    tagList(box(
+      width = 12,
       selectInput(
         inputId = "school_text",
         label = "",
@@ -470,10 +486,12 @@ server <- function(input, output, session) {
         size = 5,
         width = '100%'
       )
-    )
+    ))
   })
-  output$school_pref <- renderUI({
+  school_temp3 <- renderUI({
     tagList(
+      box(
+        width = 12,
       selectInput(
         inputId = "school_preference",
         label = "School",
@@ -481,23 +499,40 @@ server <- function(input, output, session) {
         selectize = FALSE,
         size = 5,
         width = '100%'
+      ))
+    )
+  })
+ curr_temp1 <- renderUI({
+    tagList(
+      box(
+        width = 12,
+        height = '180px',
+        selectInput(
+          inputId = "curriculum_epic",
+          label = "Curriculum",
+          choices = isolate(cips$CIPNAME),
+          multiple = TRUE
+        )
       )
     )
   })
-  output$curriculum_choice <- renderUI({
+ curr_temp2 <- renderUI({
+   tagList(box(
+     width = 12,
+     selectInput(
+       inputId = "cur_text",
+       label = "",
+       choices = input$curriculum_epic,
+       selectize = FALSE,
+       size = 5,
+       width = '100%'
+     )
+   ))
+ })
+  curr_temp3 <- renderUI({
     tagList(
-      selectInput(
-        inputId = "cur_text",
-        label = "",
-        choices = input$curriculum_epic,
-        selectize = FALSE,
-        size = 5,
-        width = '100%'
-      )
-    )
-  })
-  output$curriculum_pref <- renderUI({
-    tagList(
+      box(
+        width = 12,
       selectInput(
         inputId = "curriculum_preference",
         label = "Curriculum",
@@ -505,23 +540,40 @@ server <- function(input, output, session) {
         selectize = FALSE,
         size = 5,
         width = '100%'
-      )
+      ))
     )
   })
-  output$degree_choice <- renderUI({
-    tagList(
+
+  degree_temp1 <- renderUI({
+    tagList(box(
+      width = 12,
+      height = '180px',
       selectInput(
-        inputId = "deg_text",
-        label = "",
-        choices = input$degree_epic,
-        selectize = FALSE,
-        size = 5,
-        width = '100%'
+        inputId = "degree_epic",
+        label = "Degree",
+        choices = isolate(unique(aw_degree$Degree_Name)),
+        multiple = TRUE
       )
     )
+ )
   })
-  output$degree_pref <- renderUI({
+  degree_temp2 <- renderUI({
     tagList(
+    box(width = 12,
+        selectInput(
+          inputId = "deg_text",
+          label = "",
+          choices = input$degree_epic,
+          selectize = FALSE,
+          size = 5,
+          width = '100%'
+        )
+    ))
+  })
+  degree_temp3 <- renderUI({
+    tagList(
+      box(
+        width = 12,
       selectInput(
         inputId = "degree_preference",
         label = "Degree",
@@ -529,9 +581,94 @@ server <- function(input, output, session) {
         selectize = FALSE,
         size = 5,
         width = '100%'
-      )
+      ))
     )
   })
+  observeEvent(input$next_page1,{
+    req(input$next_page1 < 2)
+    if (first_spot() == "school") {
+      output$first_choice1 <- school_temp1
+      output$first_choice2 <- school_temp2
+      output$first_choice3 <- school_temp3
+    }
+    if (first_spot() == "occupation") {
+      output$first_choice1 <- occ_temp1
+      output$first_choice2 <- occ_temp2
+      output$first_choice3 <- occ_temp3
+    }
+    if (first_spot() == "degree") {
+      output$first_choice1 <- degree_temp1
+      output$first_choice2 <- degree_temp2
+      output$first_choice3 <- degree_temp3
+    }
+    if (first_spot() == "curriculum") {
+      output$first_choice1 <- curr_temp1
+      output$first_choice2 <- curr_temp2
+      output$first_choice3 <- curr_temp3
+    }
+    if (second_spot() == "school") {
+      output$second_choice1 <- school_temp1
+      output$second_choice2 <- school_temp2
+      output$second_choice3 <- school_temp3
+    }
+    if (second_spot() == "occupation") {
+      output$second_choice1 <- occ_temp1
+      output$second_choice2 <- occ_temp2
+      output$second_choice3 <- occ_temp3
+    }
+    if (second_spot() == "degree") {
+      output$second_choice1 <- degree_temp1
+      output$second_choice2 <- degree_temp2
+      output$second_choice3 <- degree_temp3
+    }
+    if (second_spot() == "curriculum") {
+      output$second_choice1 <- curr_temp1
+      output$second_choice2 <- curr_temp2
+      output$second_choice3 <- curr_temp3
+    }  
+    if (third_spot() == "school") {
+      output$third_choice1 <- school_temp1
+      output$third_choice2 <- school_temp2
+      output$third_choice3 <- school_temp3
+    }
+    if (third_spot() == "occupation") {
+      output$third_choice1 <- occ_temp1
+      output$third_choice2 <- occ_temp2
+      output$third_choice3 <- occ_temp3
+    }
+    if (third_spot() == "degree") {
+      output$third_choice1 <- degree_temp1
+      output$third_choice2 <- degree_temp2
+      output$third_choice3 <- degree_temp3
+    }
+    if (third_spot() == "curriculum") {
+      output$third_choice1 <- curr_temp1
+      output$third_choice2 <- curr_temp2
+      output$third_choice3 <- curr_temp3
+    }      
+    if (fourth_spot() == "school") {
+      output$fourth_choice1 <- school_temp1
+      output$fourth_choice2 <- school_temp2
+      output$fourth_choice3 <- school_temp3
+    }
+    if (fourth_spot() == "occupation") {
+      output$fourth_choice1 <- occ_temp1
+      output$fourth_choice2 <- occ_temp2
+      output$fourth_choice3 <- occ_temp3
+    }
+    if (fourth_spot() == "degree") {
+      output$fourth_choice1 <- degree_temp1
+      output$fourth_choice2 <- degree_temp2
+      output$fourth_choice3 <- degree_temp3
+    }
+    if (fourth_spot() == "curriculum") {
+      output$fourth_choice1 <- curr_temp1
+      output$fourth_choice2 <- curr_temp2
+      output$fourth_choice3 <- curr_temp3
+    }      
+  })
+
+  
   temp_table <- reactive({
     mast_temp <- alt_title
     if(!is.null(input$alt_temp)){
@@ -576,7 +713,7 @@ server <- function(input, output, session) {
                                                 "Entry_Level<br>Degree" = "Entry_Degree")
   })
   
-  observeEvent(input$make_table, {
+  observeEvent(input$make_table,{
     output$table <- renderDataTable({
       DT::datatable(
         data = table_var(),
@@ -601,6 +738,7 @@ server <- function(input, output, session) {
     })
   })
 
+  
     observeEvent(input$next_welcome, {
       updateTabsetPanel(session, "tabs",selected = "page1")
     })
@@ -631,13 +769,16 @@ server <- function(input, output, session) {
     observeEvent(input$previous_page5, {
       updateTabsetPanel(session, "tabs",selected = "page4")
     })
-    output$school_loc <- renderPrint({ 
-      school <- as.numeric(input$school_choice_position$top)
-      school <- round(((-school + 370) / 43.5), 0)
+ #   output$school_loc <- renderPrint({ 
+      
+ #     print(page1_list())
+ #     print(first_spot())
+ #     print(second_spot())
+ #     print(third_spot())
+ #     print(fourth_spot())
+ #     })
+    
 
-      print(school)
-      print(begin_order())
-      })
 }
 
 shinyApp(ui, server)
