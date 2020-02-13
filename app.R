@@ -35,7 +35,7 @@ ent_degree <- readRDS("Ent_Degree.rds")
 aw_degree <- readRDS("AW_Degree.rds")
 
 # epic_columns <- c( "INSTNM", "CIPNAME", "Degree_Name", "OCCNAME",
-                  "Entry_Degree", "MedWage")
+#                  "Entry_Degree", "MedWage")
 
 page1_order <- data.frame(col1 = sample(c("school", "occupation", "degree", "curriculum")), col2 = sample(c(1,2,3,4)))
 
@@ -631,6 +631,7 @@ server <- function(input, output, session) {
       ))
     )
   })
+  
   observeEvent(input$next_page1,{
     req(input$next_page1 < 2)
     if (first_spot() == "school") {
