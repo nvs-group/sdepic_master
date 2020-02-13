@@ -1,5 +1,5 @@
 ## app.R ##
-##Self Directed EPIC 2/04/2020
+##Self Directed EPIC 2/13/2020
 library(shiny)
 library(shinydashboard)
 library(shinydashboardPlus)
@@ -34,7 +34,7 @@ occupation <- readRDS("Occupations.rds") %>% select(OCCNAME, OCCCODE, OCCTYPE, E
 ent_degree <- readRDS("Ent_Degree.rds")
 aw_degree <- readRDS("AW_Degree.rds")
 
-epic_columns <- c( "INSTNM", "CIPNAME", "Degree_Name", "OCCNAME",
+# epic_columns <- c( "INSTNM", "CIPNAME", "Degree_Name", "OCCNAME",
                   "Entry_Degree", "MedWage")
 
 page1_order <- data.frame(col1 = sample(c("school", "occupation", "degree", "curriculum")), col2 = sample(c(1,2,3,4)))
@@ -52,7 +52,7 @@ curriculum_filter <- c(character())
 header <- dashboardHeader( title = "E.P.I.C. Planning", titleWidth = 230, uiOutput("logoutbtn"))
 sidebar <- dashboardSidebar(
   tags$style(".fa-adjust {color:#E87722}"),
-  tags$style(".fa-tasks {color:yellow}"),
+  tags$style(".fa-user {color:blue}"),
   sidebarMenu(id = "tabs",
               menuItem("Welcome", tabName = "welcome"),
               menuItem("Page 1", tabName = "page1", icon = icon("adjust")),
@@ -345,7 +345,7 @@ body <- dashboardBody(HTML('<meta name="viewport" content="width=1920">'),
                     color = "primary"
                   )
                 )
-                )
+              )
             )
     ), 
     tabItem(tabName = "page4",
@@ -740,7 +740,7 @@ observeEvent(input$degree_text, {
     degree_filter <- aw_degree %>% filter(aw_degree$Degree_Name %in% degree_table()$Degree_Name) 
     degree_filter <- degree_filter %>% select(Degree_Name)
     updateSelectInput(session, inputId = "degree_first", label = NULL,
-                      choices = isolate(degree_filter[,1]))
+                      choices = isolate(sort(degree_filter[,1])))
   }
 })
 curriculum_table <- reactive({
@@ -794,7 +794,8 @@ observeEvent(input$curriculum_text,{
     filtered_table <- left_join(filtered_table, aw_degree, by = "AWLEVEL")
     filtered_table <- left_join(filtered_table, ent_degree, by = "Entry_Code")
     filtered_table <- left_join(filtered_table, occupation, by = "OCCCODE")
-    filtered_table <- filtered_table %>% select(all_of(epic_columns))
+    filtered_table <- filtered_table %>% select("INSTNM", "CIPNAME", "Degree_Name", "OCCNAME",
+                                                "Entry_Degree", "MedWage")
     school_filter <<- unique(filtered_table$INSTNM)
     degree_filter <<- unique(filtered_table$Degree_Name)
     occupation_filter <<- unique(filtered_table$OCCNAME)
