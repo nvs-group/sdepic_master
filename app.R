@@ -17,7 +17,7 @@ library(shinyjqui)
 library(shinymanager)
 library(gmailr)
 library(shinyBS)
-library(dplyr)
+#library(dplyr)
 #cnames <- readRDS("Column_names.rds")
 #degrees <- readRDS("Degrees.rds")
 #state_abbr <- read_csv("Book1.csv")
@@ -35,7 +35,7 @@ ent_degree <- readRDS("Ent_Degree.rds")
 aw_degree <- readRDS("AW_Degree.rds")
 
 # epic_columns <- c( "INSTNM", "CIPNAME", "Degree_Name", "OCCNAME",
-                  "Entry_Degree", "MedWage")
+#                  "Entry_Degree", "MedWage")
 
 page1_order <- data.frame(col1 = sample(c("school", "occupation", "degree", "curriculum")), col2 = sample(c(1,2,3,4)))
 
@@ -459,7 +459,7 @@ server <- function(input, output, session) {
         label = NULL,
         choices = isolate(occupation$OCCNAME),
         selectize = FALSE,
-        size = 8,
+        size = 5,
         width = '100%'
       ),
       div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-10px; margin-bottom: -18px",
@@ -504,7 +504,7 @@ server <- function(input, output, session) {
         label = NULL,
         choices = isolate(sort(school$INSTNM)),
         selectize = FALSE,
-        size = 8,
+        size = 5,
         width = '100%'
       ),
       div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-10px; margin-bottom: -18px",
@@ -550,7 +550,7 @@ server <- function(input, output, session) {
           label = NULL,
           choices = isolate(cips$CIPNAME),
           selectize = FALSE,
-          size = 8,
+          size = 5,
           width = '100%'
         ),
       div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-10px; margin-bottom: -18px",
@@ -596,7 +596,7 @@ server <- function(input, output, session) {
        label = NULL,
        choices = isolate(aw_degree$Degree_Name),
        selectize = FALSE,
-       size = 8,
+       size = 5,
        width = '100%'
      ),
      div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-10px; margin-bottom: -18px",
@@ -631,6 +631,7 @@ server <- function(input, output, session) {
       ))
     )
   })
+  
   observeEvent(input$next_page1,{
     req(input$next_page1 < 2)
     if (first_spot() == "school") {
@@ -722,8 +723,8 @@ school_table <- reactive({
 })
 observeEvent(input$school_text,{
   if(!is.null(input$school_text)){
-    school_filter <- school %>% filter(school$INSTNM %in% school_table()$INSTNM) 
-    school_filter <- school_filter %>% select(INSTNM)
+    school_filter <<- school %>% filter(school$INSTNM %in% school_table()$INSTNM) 
+    school_filter <<- school_filter %>% select(INSTNM)
     updateSelectInput(session, inputId = "school_first", label = NULL,
                       choices = isolate(sort(school_filter[,1])))
   }
@@ -735,12 +736,13 @@ degree_table <- reactive({
   }
 })
 observeEvent(input$degree_text, {
-  req(input$degree_text)
+#  req(input$degree_text)
   if(!is.null(input$degree_text)){
-    degree_filter <- aw_degree %>% filter(aw_degree$Degree_Name %in% degree_table()$Degree_Name) 
-    degree_filter <- degree_filter %>% select(Degree_Name)
+    degree_filter <<- aw_degree %>% filter(aw_degree$Degree_Name %in% degree_table()$Degree_Name)
+    degree_filter <<- degree_filter$Degree_Name
+ 
     updateSelectInput(session, inputId = "degree_first", label = NULL,
-                      choices = isolate(sort(degree_filter[,1])))
+                      choices = isolate(degree_filter))
   }
 })
 curriculum_table <- reactive({
@@ -751,8 +753,8 @@ curriculum_table <- reactive({
 })
 observeEvent(input$curriculum_text,{
   if(!is.null(input$curriculum_text)){
-    curriculum_filter <- cips %>% filter(cips$CIPNAME %in% curriculum_table()$CIPNAME) 
-    curriculum_filter <- curriculum_filter %>% select(CIPNAME)
+    curriculum_filter <<- cips %>% filter(cips$CIPNAME %in% curriculum_table()$CIPNAME) 
+    curriculum_filter <<- curriculum_filter %>% select(CIPNAME)
     updateSelectInput(session, inputId = "curriculum_first", label = NULL,
                       choices = isolate(sort(curriculum_filter[,1])))
   }
@@ -765,7 +767,7 @@ observeEvent(input$curriculum_text,{
   })
   observeEvent(input$occupation_text,{
     if(!is.null(input$occupation_text)){
-    occupation_filter <- occupation %>% filter(occupation$OCCCODE %in% occupation_table()$OCCCODE) 
+    occupation_filter <<- occupation %>% filter(occupation$OCCCODE %in% occupation_table()$OCCCODE) 
     updateSelectInput(session, inputId = "occupation_first", label = NULL,
                       choices = sort(unique(occupation_filter$OCCNAME)))
     }
