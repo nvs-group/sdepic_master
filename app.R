@@ -39,10 +39,20 @@ epic_columns <- c( "INSTNM", "CIPNAME", "Degree_Name", "OCCNAME",
 
 page1_order <- data.frame(col1 = sample(c("school", "occupation", "degree", "curriculum")), col2 = sample(c(1,2,3,4)))
 
+school_list <- c(character())
+degree_list <- c(character())
+occupation_list <- c(character())
+curriculum_list <- c(character())
+
+school_filter <- c(character())
+degree_filter <- c(character())
+occupation_filter <- c(character())
+curriculum_filter <- c(character())
 
 header <- dashboardHeader( title = "E.P.I.C. Planning", titleWidth = 230, uiOutput("logoutbtn"))
 sidebar <- dashboardSidebar(
   tags$style(".fa-adjust {color:#E87722}"),
+  tags$style(".fa-tasks {color:yellow}"),
   sidebarMenu(id = "tabs",
               menuItem("Welcome", tabName = "welcome"),
               menuItem("Page 1", tabName = "page1", icon = icon("adjust")),
@@ -53,11 +63,14 @@ sidebar <- dashboardSidebar(
   )
 ) 
 body <- dashboardBody(HTML('<meta name="viewport" content="width=1920">'),
+                      tags$head(tags$style(HTML("div.col-sm-12 {padding: 0px;
+                                                margin-top: -5px; margin-bottom: -10px;
+                                                margin-left: -10px; margin-right: -10px; }; "))), 
   tabItems(
     tabItem(tabName = "welcome", useShinyalert(), useShinyjs(),
             fluidPage(
-              box(width = 12, 
-                  h1("Welcome to your Personel EPIC Portal"), align = 'center'),
+              div(align = 'center', style = "font-size: 20px; padding-top: 0px; margin-top:1em",
+                  h1("Welcome to your Personel EPIC Portal")),
               absolutePanel(
                 bottom = 0,
                 left = "auto",
@@ -90,7 +103,7 @@ body <- dashboardBody(HTML('<meta name="viewport" content="width=1920">'),
             fluidPage( 
               div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-2em", 
              
-                  h3("Let's Get Started"), 
+                  h2("Let's Get Started"), 
                   HTML("Total estimated time to complete is 7 minutes.<br>Step 1: Indicate how important and settled these six preferences are in your mind (1 min)<br>
                   Low <---------------------------------- IMPORTANCE TO YOU? ----------------------------------> High")
                   ),
@@ -98,7 +111,7 @@ body <- dashboardBody(HTML('<meta name="viewport" content="width=1920">'),
                      box(width = 12,
                          h3("Decided"),
                          br(),
-                         
+                         br(),
                          br(),
                          h3("HOW"),
                          h3("SETTLED"),
@@ -110,7 +123,7 @@ body <- dashboardBody(HTML('<meta name="viewport" content="width=1920">'),
                          h3("Undecided")
                          )
                      ),
-              verbatimTextOutput(outputId = "school_loc" ),
+#              verbatimTextOutput(outputId = "school_loc" ),
               jqui_droppable(
                 column(width = 8, id = "box_2", style = "background-color:#2442aa; height: 475px")),
               
@@ -153,7 +166,9 @@ body <- dashboardBody(HTML('<meta name="viewport" content="width=1920">'),
                     style = 'border-radius:10px; text-align: center;width:110px; height:30px;
                     background-color: orange; font-size: 150%'),
                 options = list(containment = "#box_2", scroll = FALSE)
-              )
+              ),
+              bsPopover(id = "box_2", title = "Placement Help", content = "This is the help",
+                        placement = "top", trigger = "click")
               ),
               absolutePanel(
                 bottom = 0,
@@ -185,8 +200,8 @@ body <- dashboardBody(HTML('<meta name="viewport" content="width=1920">'),
             ),
     tabItem(tabName = "page2",
             fluidPage(
-              box(width = 12, 
-                  h3("Step 2: Fill in preferences if you have them (3 min)"), align = 'center'),
+              div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-2em", 
+                  h2("Step 2: Fill in preferences if you have them (3 min)")),
               absolutePanel(
                 bottom = 0,
                 left = "auto",
@@ -226,9 +241,7 @@ body <- dashboardBody(HTML('<meta name="viewport" content="width=1920">'),
                 box(width = 2,
                     numericInput(inputId = "annual_ed_cost", label = "Max Annual Ed Cost",
                                  value = 50000, min = 0)
-                    ),
-                box(width = 3,
-                    textInput(inputId = "alt_temp", label = "Alternate Title"))
+                    )
               ),
               fluidRow(
                 jqui_sortable(div(id = 'choices',
@@ -264,8 +277,8 @@ body <- dashboardBody(HTML('<meta name="viewport" content="width=1920">'),
     ), 
     tabItem(tabName = "page3",
             fluidPage(
-              box(width = 12, 
-                  h3("Step 3: Create and Save Education and Career Scenarios (2 min per scenario)"), align = 'center'),
+              div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-2em", 
+                  h2("Step 3: Create and Save Education and Career Scenarios (2 min per scenario)")),
               absolutePanel(
                 bottom = 0,
                 left = "auto",
@@ -309,24 +322,36 @@ body <- dashboardBody(HTML('<meta name="viewport" content="width=1920">'),
               ))), 
               fluidRow(
                 column(width = 2,
-                              box(
-                                width = 12,
-                                actionButton(
-                                  inputId = "make_table",
-                                  label = "Begin",
-                                  width = '100%'
-                                )
-                              )),
+                       actionButton(
+                         inputId = "make_table",
+                         label = "Build Table",
+                         width = '100%'
+                       )), 
                        column(width = 8,
                               div(
                                 style = 'overflow-x: scroll', DT::dataTableOutput(outputId = "table")
-                              )))
+                              )),
+                
+                absolutePanel(
+                  top = 340,
+                  right = 50,
+                  width = '150px',
+                  height = '100px',
+                  actionBttn(
+                    inputId = "save_row",
+                    label = "Save Scenario",
+                    size = "md",
+                    block = TRUE,
+                    color = "primary"
+                  )
+                )
+                )
             )
     ), 
     tabItem(tabName = "page4",
             fluidPage(
-              box(width = 12, 
-                  h3("Step 4: Select up to 3 saved scenarios to compare (1 min)"), align = 'center'),
+              div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-2em", 
+                  h2("Step 4: Select up to 3 saved scenarios to compare (1 min)")),
               absolutePanel(
                 bottom = 0,
                 left = "auto",
@@ -357,8 +382,8 @@ body <- dashboardBody(HTML('<meta name="viewport" content="width=1920">'),
             ),
     tabItem(tabName = "page5", 
             fluidPage(
-              box(width = 12, 
-                  h3("Step 5: Compare Scenarios, Select Favorites, and Request a Report (1 min)"), align = 'center'),
+              div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-2em", 
+                  h2("Step 5: Compare Scenarios, Select Favorites, and Request a Report (1 min)")),
               absolutePanel(
                 bottom = 0,
                 left = "auto",
@@ -423,163 +448,185 @@ server <- function(input, output, session) {
   fourth_spot <- reactive({
     page1_list()[1]
   })
+  
   occ_temp1 <- renderUI({
-    tagList(box(
-      width = 12,
-      height = '180px',
+    tagList(
+      div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:0em",
+                strong("Occupation")),
+            textInput(inputId = "occupation_text", label = NULL, width = '100%'),
       selectInput(
-        inputId = "occupation_epic",
-        label = "Occupation",
+        inputId = "occupation_first",
+        label = NULL,
         choices = isolate(occupation$OCCNAME),
-        multiple = TRUE
-      )
-    ))
+        selectize = FALSE,
+        size = 8,
+        width = '100%'
+      ),
+      div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-10px; margin-bottom: -18px",
+          actionBttn(inputId = "occupation_add", "Add", style = "fill", color = "primary", size = "sm"))
+    )
   })
   occ_temp2 <- renderUI({
-    tagList(box(
-      width = 12,
-      selectInput(
-        inputId = "occ_text",
+    tagList(
+      div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:0em",
+          selectInput(    
+        inputId = "occupation_middle",
         label = "",
-        choices = input$occupation_epic,
+        choices = c(None = '',occupation_list),
         selectize = FALSE,
         size = 5,
         width = '100%'
-      )
-    ))
+      )),
+      div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-10px; margin-bottom: 10px",
+          actionBttn(inputId = "occupation_delete", "Delete", style = "fill", color = "danger", size = "sm"))
+    )
   })
   occ_temp3 <- renderUI({
     tagList(
-      box(
-        width = 12,
+      div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:0em",
       selectInput(
-        inputId = "occupation_preference",
+        inputId = "occupation_last",
         label = "Occupation",
-        choices = c(All = '', input$occupation_epic),
+        choices = c(All = '', occupation_list),
         selectize = FALSE,
-        size = 5,
+        size = 7,
         width = '100%'
       ))
     )
   })
   school_temp1 <- renderUI({
-    tagList(box(
-      width = 12,
-      height = '180px',
+    tagList(
+      div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:0em",
+          strong("School")),
+      textInput(inputId = "school_text", label = NULL, width = '100%'),
       selectInput(
-        inputId = "school_epic",
-        label = "School",
-        choices = isolate(school$INSTNM),
-        multiple = TRUE
-      )
-    ))
+        inputId = "school_first",
+        label = NULL,
+        choices = isolate(sort(school$INSTNM)),
+        selectize = FALSE,
+        size = 8,
+        width = '100%'
+      ),
+      div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-10px; margin-bottom: -18px",
+      actionBttn(inputId = "school_add", "Add", style = "fill", color = "primary", size = "sm"))
+    )
   })
   
   school_temp2 <- renderUI({
-    tagList(box(
-      width = 12,
+    tagList(
+      div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:0em",
       selectInput(
-        inputId = "school_text",
+        inputId = "school_middle",
         label = "",
-        choices = input$school_epic,
+        choices = c(None = '', school_list),
         selectize = FALSE,
         size = 5,
         width = '100%'
-      )
-    ))
+    )),
+    div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-10px; margin-bottom: 10px",
+        actionBttn(inputId = "school_delete", "Delete", style = "fill", color = "danger", size = "sm"))
+    )
   })
   school_temp3 <- renderUI({
     tagList(
-      box(
-        width = 12,
+        div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:0em",
       selectInput(
-        inputId = "school_preference",
+        inputId = "school_last",
         label = "School",
-        choices = c(All = '', input$school_epic),
+        choices = c(All = '',school_list),
         selectize = FALSE,
-        size = 5,
+        size = 7,
         width = '100%'
       ))
     )
   })
  curr_temp1 <- renderUI({
     tagList(
-      box(
-        width = 12,
-        height = '180px',
+      div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:0em",
+          strong("Curriculum")),
+      textInput(inputId = "curriculum_text", label = NULL, width = '100%'),
         selectInput(
-          inputId = "curriculum_epic",
-          label = "Curriculum",
+          inputId = "curriculum_first",
+          label = NULL,
           choices = isolate(cips$CIPNAME),
-          multiple = TRUE
-        )
+          selectize = FALSE,
+          size = 8,
+          width = '100%'
+        ),
+      div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-10px; margin-bottom: -18px",
+          actionBttn(inputId = "curriculum_add", "Add", style = "fill", color = "primary", size = "sm"))
       )
-    )
+    
   })
  curr_temp2 <- renderUI({
-   tagList(box(
-     width = 12,
+   tagList(div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:0em",
      selectInput(
-       inputId = "cur_text",
+       inputId = "curriculum_middle",
        label = "",
-       choices = input$curriculum_epic,
+       choices = c(None = '',curriculum_list),
        selectize = FALSE,
        size = 5,
+       width = '100%'
+     )),
+     div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-10px; margin-bottom: 10px",
+         actionBttn(inputId = "curriculum_delete", "Delete", style = "fill", color = "danger", size = "sm"))
+   )
+ })
+ curr_temp3 <- renderUI({
+   tagList(
+     div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:0em",
+     selectInput(
+       inputId = "curriculum_last",
+       label = "Curriculum",
+       choices = c(All = '', curriculum_list),
+       selectize = FALSE,
+       size = 7,
        width = '100%'
      )
    ))
  })
-  curr_temp3 <- renderUI({
-    tagList(
-      box(
-        width = 12,
-      selectInput(
-        inputId = "curriculum_preference",
-        label = "Curriculum",
-        choices = c(All = '', input$curriculum_epic),
-        selectize = FALSE,
-        size = 5,
-        width = '100%'
-      ))
-    )
-  })
 
-  degree_temp1 <- renderUI({
-    tagList(box(
-      width = 12,
-      height = '180px',
-      selectInput(
-        inputId = "degree_epic",
-        label = "Degree",
-        choices = isolate(unique(aw_degree$Degree_Name)),
-        multiple = TRUE
-      )
-    )
- )
-  })
+ degree_temp1 <- renderUI({
+   tagList(
+     div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:0em",
+               strong("Degree")),
+     textInput(inputId = "degree_text", label = NULL, width = '100%'),
+     selectInput(
+       inputId = "degree_first",
+       label = NULL,
+       choices = isolate(aw_degree$Degree_Name),
+       selectize = FALSE,
+       size = 8,
+       width = '100%'
+     ),
+     div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-10px; margin-bottom: -18px",
+         actionBttn(inputId = "degree_add", "Add", style = "fill", color = "primary", size = "sm"))
+   )
+ })
   degree_temp2 <- renderUI({
     tagList(
-    box(width = 12,
+      div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:0em",
         selectInput(
-          inputId = "deg_text",
+          inputId = "degree_middle",
           label = "",
-          choices = input$degree_epic,
+          choices = c(None = '',degree_list),
           selectize = FALSE,
           size = 5,
           width = '100%'
-        )
-    ))
+        )),
+      div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-10px; margin-bottom: 10px",
+              actionBttn(inputId = "degree_delete", "Delete", style = "fill", color = "danger", size = "sm"))
+    )
   })
   degree_temp3 <- renderUI({
     tagList(
-      box(
-        width = 12,
-      selectInput(
-        inputId = "degree_preference",
+      div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:0em",
+        selectInput(
+        inputId = "degree_last",
         label = "Degree",
-        choices = c(All = '', input$degree_epic),
+        choices = c(All = '', degree_list),
         selectize = FALSE,
-        size = 5,
+        size = 7,
         width = '100%'
       ))
     )
@@ -667,38 +714,79 @@ server <- function(input, output, session) {
       output$fourth_choice3 <- curr_temp3
     }      
   })
-
-  
-  temp_table <- reactive({
-    mast_temp <- alt_title
-    if(!is.null(input$alt_temp)){
-      mast_temp <- filter(mast_temp , grepl(input$alt_temp, mast_temp$AltName, ignore.case = TRUE))
+school_table <- reactive({
+  school_t1 <- school
+  if(!is.null(input$school_text)){
+    school_t1 <- filter(school_t1 , grepl(input$school_text, school_t1$INSTNM, ignore.case = TRUE))
+  }
+})
+observeEvent(input$school_text,{
+  if(!is.null(input$school_text)){
+    school_filter <- school %>% filter(school$INSTNM %in% school_table()$INSTNM) 
+    school_filter <- school_filter %>% select(INSTNM)
+    updateSelectInput(session, inputId = "school_first", label = NULL,
+                      choices = isolate(sort(school_filter[,1])))
+  }
+})
+degree_table <- reactive({
+  degree_t1 <- aw_degree
+  if(!is.null(input$degree_text)){
+    degree_t1 <- filter(degree_t1 , grepl(input$degree_text, degree_t1$Degree_Name, ignore.case = TRUE))
+  }
+})
+observeEvent(input$degree_text, {
+  req(input$degree_text)
+  if(!is.null(input$degree_text)){
+    degree_filter <- aw_degree %>% filter(aw_degree$Degree_Name %in% degree_table()$Degree_Name) 
+    degree_filter <- degree_filter %>% select(Degree_Name)
+    updateSelectInput(session, inputId = "degree_first", label = NULL,
+                      choices = isolate(degree_filter[,1]))
+  }
+})
+curriculum_table <- reactive({
+  curriculum_t1 <- cips
+  if(!is.null(input$curriculum_text)){
+    curriculum_t1 <- filter(curriculum_t1 , grepl(input$curriculum_text, curriculum_t1$CIPNAME, ignore.case = TRUE))
+  }
+})
+observeEvent(input$curriculum_text,{
+  if(!is.null(input$curriculum_text)){
+    curriculum_filter <- cips %>% filter(cips$CIPNAME %in% curriculum_table()$CIPNAME) 
+    curriculum_filter <- curriculum_filter %>% select(CIPNAME)
+    updateSelectInput(session, inputId = "curriculum_first", label = NULL,
+                      choices = isolate(sort(curriculum_filter[,1])))
+  }
+})
+  occupation_table <- reactive({
+    occupation_t1 <- alt_title
+    if(!is.null(input$occupation_text)){
+      occupation_t1 <- filter(occupation_t1 , grepl(input$occupation_text, occupation_t1$AltName, ignore.case = TRUE))
     }
   })
-  observe({
-    if(!is.null(input$alt_temp)){
-    occ_filter <- occupation %>% filter(occupation$OCCCODE %in% temp_table()$OCCCODE) 
-    updateSelectInput(session, inputId = "occupation_epic", label = "Occupation",
-                      choices = sort(unique(occ_filter$OCCNAME)))
+  observeEvent(input$occupation_text,{
+    if(!is.null(input$occupation_text)){
+    occupation_filter <- occupation %>% filter(occupation$OCCCODE %in% occupation_table()$OCCCODE) 
+    updateSelectInput(session, inputId = "occupation_first", label = NULL,
+                      choices = sort(unique(occupation_filter$OCCNAME)))
     }
   })
   
   table_var <- reactive ({
     backbone_temp <- backbone
-    if(!is.null(input$occupation_preference) & input$occupation_preference !='') {
-      occupation_temp <- filter(occupation, OCCNAME %in% input$occupation_preference) %>% select(OCCCODE)
+    if(!is.null(input$occupation_last) & input$occupation_last !='') {
+      occupation_temp <- filter(occupation, OCCNAME %in% input$occupation_last) %>% select(OCCCODE)
       backbone_temp <- filter(backbone_temp, OCCCODE %in% occupation_temp)
     }
-    if(!is.null(input$school_preference) & input$school_preference !='') {
-      school_temp <- filter(school, INSTNM %in% input$school_preference) %>% select(UNITID)
+    if(!is.null(input$school_last) & input$school_last !='') {
+      school_temp <- filter(school, INSTNM %in% input$school_last) %>% select(UNITID)
       backbone_temp <- filter(backbone_temp, UNITID %in% school_temp)
     }
-    if(!is.null(input$curriculum_preference) & input$curriculum_preference !='') {
-      curriculum_temp <- filter(cips, CIPNAME %in% input$curriculum_preference) %>% select(CIPCODE)
+    if(!is.null(input$curriculum_last) & input$curriculum_last !='') {
+      curriculum_temp <- filter(cips, CIPNAME %in% input$curriculum_last) %>% select(CIPCODE)
       backbone_temp <- filter(backbone_temp, CIPCODE %in% curriculum_temp)                      
     }
-    if(!is.null(input$degree_preference) & input$degree_preference !='') {
-      degree_temp <- filter(aw_degree, Degree_Name %in% input$degree_preference) %>% select(AWLEVEL)
+    if(!is.null(input$degree_last) & input$degree_last !='') {
+      degree_temp <- filter(aw_degree, Degree_Name %in% input$degree_last) %>% select(AWLEVEL)
       backbone_temp <- filter(backbone_temp, AWLEVEL %in% degree_temp)
     }
     filtered_table <- left_join(backbone_temp, school, by = "UNITID")
@@ -707,6 +795,28 @@ server <- function(input, output, session) {
     filtered_table <- left_join(filtered_table, ent_degree, by = "Entry_Code")
     filtered_table <- left_join(filtered_table, occupation, by = "OCCCODE")
     filtered_table <- filtered_table %>% select(all_of(epic_columns))
+    school_filter <<- unique(filtered_table$INSTNM)
+    degree_filter <<- unique(filtered_table$Degree_Name)
+    occupation_filter <<- unique(filtered_table$OCCNAME)
+    curriculum_filter <<- unique(filtered_table$CIPNAME)
+    
+    if(identical(school_list, character(0))){
+      updateSelectInput(session, inputId = "school_last", label = "School",
+                        choices = isolate(c(All = '', sort(school_filter))), selected = '')
+    }
+    if(identical(occupation_list, character(0))){
+      updateSelectInput(session, inputId = "occupation_last", label = "Occupation",
+                        choices = isolate(c(All = '', sort(occupation_filter))), selected = '')
+    }
+    if(identical(curriculum_list, character(0))){
+      updateSelectInput(session, inputId = "curriculum_last", label = "Curriculum",
+                        choices = isolate(c(All = '', sort(curriculum_filter))), selected = '')
+    }
+    if(identical(degree_list, character(0))){
+      updateSelectInput(session, inputId = "degree_last", label = "Degree",
+                        choices = isolate(c(All = '', sort(degree_filter))), selected = '')
+    }
+    
     filtered_table <- filtered_table %>% rename("Institution<br>Name" = "INSTNM",
                                                 "Curriculum<br>Name" = "CIPNAME", "Degree<br>Name" = "Degree_Name", 
                                                 "Occupation<br>Name" = "OCCNAME", "Median<br>Wage" = "MedWage",
@@ -722,7 +832,6 @@ server <- function(input, output, session) {
           filter = FALSE,
           pageLength = 5,
           autoWidth = TRUE,
-          #columnDefs = list(list(width = '180px', targets = c(1,2,3,4,5))),
           lengthMenu = c(5, 8, 10)
         ),
         selection = list(mode = 'single')
@@ -737,8 +846,6 @@ server <- function(input, output, session) {
         )
     })
   })
-
-  
     observeEvent(input$next_welcome, {
       updateTabsetPanel(session, "tabs",selected = "page1")
     })
@@ -769,16 +876,185 @@ server <- function(input, output, session) {
     observeEvent(input$previous_page5, {
       updateTabsetPanel(session, "tabs",selected = "page4")
     })
- #   output$school_loc <- renderPrint({ 
-      
- #     print(page1_list())
- #     print(first_spot())
- #     print(second_spot())
- #     print(third_spot())
- #     print(fourth_spot())
- #     })
-    
 
+    observeEvent(input$school_add, {
+      if (!is.null(input$school_first)) {
+        school_list <<- rbind(school_list, input$school_first)
+        school_list <<- unique(school_list)
+        updateSelectInput(session,
+                          inputId = "school_middle",
+                          label = "",
+                          choices = isolate(c(None = '', school_list))
+        )
+        updateSelectInput(session,
+                          inputId = "school_last",
+                          label = "School",
+                          choices = c(All = '', school_list),
+                          selected = '')
+      }
+    })
+    observeEvent(input$school_delete, {
+      if(!is.null(input$school_middle)) {
+        school_list <<- school_list[!school_list %in% input$school_middle]
+        updateSelectInput(session,
+                          inputId = "school_middle",
+                          label = "",
+                          choices = isolate(c(None = '', school_list)))
+        updateSelectInput(session,
+                          inputId = "school_last",
+                          label = "School",
+                          choices = isolate(c(All = '', school_list)),
+                          selected = '')
+      }
+    })
+    observeEvent(input$degree_add, {
+      if (!is.null(input$degree_first)) {
+        degree_list <<- rbind(degree_list, input$degree_first)
+        degree_list <<- unique(degree_list)
+        updateSelectInput(session,
+                          inputId = "degree_middle",
+                          label = "",
+                          choices = isolate(c(None = '', degree_list)))
+        updateSelectInput(session,
+                          inputId = "degree_last",
+                          label = "Degree",
+                          choices = c(All = '', degree_list),
+                          selected = '')
+      }
+    })
+    observeEvent(input$degree_delete, {
+      if(!is.null(input$degree_middle)) {
+        degree_list <<- degree_list[!degree_list %in% input$degree_middle]
+        updateSelectInput(session,
+                          inputId = "degree_middle",
+                          label = "",
+                          choices = isolate(c(None = '', degree_list)))
+        updateSelectInput(session,
+                          inputId = "degree_last",
+                          label = "Degree",
+                          choices = isolate(c(All = '', degree_list)),
+                          selected = '')
+      }
+    })
+    observeEvent(input$degree_last,{
+      req(input$degree_last)
+      if(identical(degree_list, character(0))){
+        degree_list <<- rbind(degree_list, input$degree_last)
+        updateSelectInput(session,
+                          inputId = "degree_last",
+                          label = "Degree",
+                          choices = c(All = '', degree_list),
+                          selected = degree_list[,1])
+        updateSelectInput(session,
+                          inputId = "degree_middle",
+                          label = "",
+                          choices = isolate(c(None = '', degree_list))
+        )
+      }
+    })
+    observeEvent(input$occupation_last,{
+      req(input$occupation_last)
+      if(identical(occupation_list, character(0))){
+        occupation_list <<- rbind(occupation_list, input$occupation_last)
+        updateSelectInput(session,
+                          inputId = "occupation_last",
+                          label = "Occupation",
+                          choices = c(All = '', occupation_list),
+                          selected = occupation_list[,1])
+        updateSelectInput(session,
+                          inputId = "occupation_middle",
+                          label = "",
+                          choices = isolate(c(None = '', occupation_list)))
+      }
+    })
+    observeEvent(input$school_last,{
+      req(input$school_last)
+      if(identical(school_list, character(0))){
+        school_list <<- rbind(school_list, input$school_last)
+        updateSelectInput(session,
+                          inputId = "school_last",
+                          label = "School",
+                          choices = c(All = '', school_list),
+                          selected = school_list[,1])
+        updateSelectInput(session,
+                          inputId = "school_middle",
+                          label = "",
+                          choices = isolate(c(None = '', school_list)))
+      }
+    })
+    observeEvent(input$curriculum_last,{
+      req(input$curriculum_last)
+      if(identical(curriculum_list, character(0))){
+      curriculum_list <<- rbind(curriculum_list, input$curriculum_last)
+        updateSelectInput(session,
+                          inputId = "curriculum_last",
+                          label = "Curriculum",
+                          choices = c(All = '', curriculum_list),
+                          selected = curriculum_list[,1])
+        updateSelectInput(session,
+                          inputId = "curriculum_middle",
+                          label = "",
+                          choices = isolate(c(None = '', curriculum_list)))
+      }
+    })
+    observeEvent(input$occupation_add, {
+      if (!is.null(input$occupation_first)) {
+        occupation_list <<- rbind(occupation_list, input$occupation_first)
+        occupation_list <<- unique(occupation_list)
+        updateSelectInput(session,
+                          inputId = "occupation_middle",
+                          label = "",
+                          choices = isolate(c(None = '', occupation_list)))
+        updateSelectInput(session,
+                          inputId = "occupation_last",
+                          label = "Occupation",
+                          choices = c(All = '', occupation_list),
+                          selected = '')
+      }
+    })
+    observeEvent(input$occupation_delete, {
+      if(!is.null(input$occupation_middle)) {
+        occupation_list <<- occupation_list[!occupation_list %in% input$occupation_middle]
+        updateSelectInput(session,
+                          inputId = "occupation_middle",
+                          label = "",
+                          choices = isolate(c(None = '', occupation_list)))
+        updateSelectInput(session,
+                          inputId = "occupation_last",
+                          label = "Occupation",
+                          choices = isolate(c(All = '', occupation_list)),
+                          selected = '')
+      }
+    })
+    observeEvent(input$curriculum_add, {
+      if (!is.null(input$curriculum_first)) {
+        curriculum_list <<- rbind(curriculum_list, input$curriculum_first)
+        curriculum_list <<- unique(curriculum_list)
+        updateSelectInput(session,
+                          inputId = "curriculum_middle",
+                          label = "",
+                          choices = isolate(c(None = '', curriculum_list)))
+        updateSelectInput(session,
+                          inputId = "curriculum_last",
+                          label = "Curriculum",
+                          choices = c(All = '', curriculum_list),
+                          selected = '')
+      }
+    })
+    observeEvent(input$curriculum_delete, {
+      if(!is.null(input$curriculum_middle)) {
+        curriculum_list <<- curriculum_list[!curriculum_list %in% input$curriculum_middle]
+        updateSelectInput(session,
+                          inputId = "curriculum_middle",
+                          label = "",
+                          choices = isolate(c(None = '', curriculum_list)))
+        updateSelectInput(session,
+                          inputId = "curriculum_last",
+                          label = "Curriculum",
+                          choices = isolate(c(All = '', curriculum_list)),
+                          selected = '')
+      }
+    })
 }
 
 shinyApp(ui, server)
