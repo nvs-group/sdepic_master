@@ -631,7 +631,11 @@ server <- function(input, output, session) {
       ))
     )
   })
-  
+  observeEvent(input$tabs,{
+    if(input$tabs == "page2"){
+      click("next_page1")
+    }
+  })
   observeEvent(input$next_page1,{
     req(input$next_page1 < 2)
     if (first_spot() == "school") {
