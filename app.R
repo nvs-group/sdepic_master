@@ -1,5 +1,5 @@
 ## app.R ##
-##Self Directed EPIC-Fork 2/17/2020
+##Self Directed EPIC 2/20/2020
 library(shiny)
 library(shinydashboard)
 library(shinydashboardPlus)
@@ -17,42 +17,13 @@ library(shinyjqui)
 library(shinymanager)
 library(gmailr)
 library(shinyBS)
-#library(dplyr)
-#cnames <- readRDS("Column_names.rds")
-#degrees <- readRDS("Degrees.rds")
-#state_abbr <- read_csv("Book1.csv")
-#saveRDS(state_abbr, "state_abbr.rds")
-state_abbr <- readRDS("state_abbr.rds")
-cips <- readRDS("CIPS.rds")
-alt_title <- readRDS("AltTitle.rds")
-backbone <- readRDS("Backbone.rds")
-backbone <- backbone %>% select(UNITID, CIPCODE, AWLEVEL, CTOTALT, OCCCODE, Entry_Code)
-school <- readRDS("Schools.rds")
-occupation <- readRDS("Occupations.rds") %>% select(OCCNAME, OCCCODE, OCCTYPE, Emply2018, Emply2028,
-                                                    EmplyChg, EmplyPC, SelfEmpl, Openings, MedWage, 
-                                                    Experience, OJT)
-ent_degree <- readRDS("Ent_Degree.rds")
-aw_degree <- readRDS("AW_Degree.rds")
-
-# epic_columns <- c( "INSTNM", "CIPNAME", "Degree_Name", "OCCNAME",
-#                  "Entry_Degree", "MedWage")
-
-page1_order <- data.frame(col1 = sample(c("school", "occupation", "degree", "curriculum")), col2 = sample(c(1,2,3,4)))
 
 school_list <- c(character())
 degree_list <- c(character())
 occupation_list <- c(character())
 curriculum_list <- c(character())
 
-school_list_filter <- c(character())
-degree_list_filter <- c(character())
-occupation_list_filter <- c(character())
-curriculum_list_filter <- c(character())
 
-school_filter <- c(character())
-degree_filter <- c(character())
-occupation_filter <- c(character())
-curriculum_filter <- c(character())
 
 header <- dashboardHeader( title = "E.P.I.C. Planning", titleWidth = 230, uiOutput("logoutbtn"))
 sidebar <- dashboardSidebar(
@@ -67,45 +38,21 @@ sidebar <- dashboardSidebar(
               menuItem("Page 5", tabName = "page5", icon = icon("tasks"))
   )
 ) 
-body <- dashboardBody(HTML('<meta name="viewport" content="width=1920">'),
+body <- dashboardBody(
                     #  tags$script(HTML("$('body').addClass('fixed');")),
                    # tags$script (src="http://code.jquery.com/jquery-1.7.2.min.js"),
                    # tags$script (src="http://code.jquery.com/ui/1.8.21/jquery-ui.min.js"),
                       tags$script(src = "jquery.ui.touch-punch.js"),
-                      tags$head(tags$style(HTML("div.col-sm-12 {padding: 0px;
-                                                margin-top: -5px; margin-bottom: -10px;
-                                                margin-left: -10px; margin-right: -10px; }; "))), 
+#                      tags$head(tags$style(HTML("div.col-sm-12 {padding: 0px;
+#                                                margin-top: -5px; margin-bottom: -10px;
+#                                                margin-left: -10px; margin-right: -10px; }; "))), 
   tabItems(
-    tabItem(tabName = "welcome", useShinyalert(), useShinyjs(),
+    tabItem(tabName = "welcome", useShinyjs(),
             fluidPage(
               div(align = 'center', style = "font-size: 20px; padding-top: 0px; margin-top:1em",
-                  h1("Welcome to your Personel EPIC Portal")),
-              absolutePanel(
-                bottom = 0,
-                left = "auto",
-                width = '250px',
-                height = '100px',
-                actionBttn(
-                  inputId = "more_welcome",
-                  label = "Learn More",
-                  size = "md",
-                  block = TRUE,
-                  color = "primary"
-                )
-              ),
-              absolutePanel(
-                bottom = 0,
-                right = 50,
-                width = '250px',
-                height = '100px',
-                actionBttn(
-                  inputId = "next_welcome",
-                  label = "Get Started",
-                  size = "md",
-                  block = TRUE,
-                  color = "primary"
-                )
-              )
+                  h1("Welcome to your Personel EPIC Portal"))
+              
+              
               )
             ),
     tabItem(tabName = "page2",
@@ -137,37 +84,99 @@ body <- dashboardBody(HTML('<meta name="viewport" content="width=1920">'),
                   h2("Let's Get Started"),
                   h2("Step 2: Fill in preferences if you have them (3 min)")),
               fluidRow(
-                
-                box(width = 2,
-                    selectInput(
-                      inputId = "residence",
-                      label = "State of Residence",
-                      choices = c(None = '', (sort(state_abbr$State)))
-                    )), 
-                box(
-                  width = 2,
-                  numericInput(
-                    inputId = "min_start_salary",
-                    label = "Min Starting Salary",
-                    value = 0,
-                    min = 0
-                  )
-                ), 
-                box(
-                  width = 2,
-                  numericInput(
-                    inputId = "annual_ed_cost",
-                    label = "Max Annual Ed Cost",
-                    value = 50000,
-                    min = 0
-                  )
-                ),
-                box(
-                  width = 2,
-                  selectInput(inputId = "required_degree",
+                column(
+                  id = '5',
+                  width = 3,
+                  boxPlus(
+                    title = "State Tuition Salary",
+                    width = 12,
+                    solidHeader = TRUE,
+                    background = 'navy',
+                    collapsible = TRUE,
+                    collapsed = FALSE,
+                    closable = FALSE,
+                    accordion(
+                      inputId = "accordion5",
+                      accordionItem(
+                        id = 50,
+                        title = "State of Residence",
+                        color = "primary",
+                        collapsed = TRUE,
+                        div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-1em",
+                            selectInput(
+                              inputId = "residence",
+                              label = "State of Residence",
+                              choices = '',
+                              selectize = FALSE,
+                              size = 6,
+                              width = '100%'
+                            )
+                            )
+                      ),
+                      accordionItem(
+                        id = 51,
+                        title = "State of Interest",
+                        color = "primary",
+                        collapsed = TRUE,
+                        div( style = "font-size: 16px; padding-top: 0px; margin-top:-1em",
+                            selectInput(
+                              inputId = "state_filter",
+                              label = "",
+                              choices = c(None = '', "Confusion"),
+                              selectize = FALSE,
+                              size = 6,
+                              width = '100%'
+                            )
+                        )
+                      ),
+                      accordionItem(
+                        id = 52,
+                        title = "Required Entry Degree",
+                        color = "primary",
+                        collapsed = TRUE,
+                        div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-1em",
+                            selectInput(
+                              inputId = "required_degree",
                               label = "Required Degree",
-                              choices = c(None = '', sort(ent_degree$Entry_Degree)))
-                )
+                              choices = c(None = ''),
+                              selectize = FALSE,
+                              size = 6,
+                              width = '100%'
+                            )
+                        )
+                      ),
+                      accordionItem(
+                        id = 53,
+                        title = "Minimum Starting Salary",
+                        color = "primary",
+                        collapsed = TRUE,
+                        div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-1em",
+                            sliderInput(inputId = "min_start_salary",
+                                        label = "Desired Income Level:",
+                                        value = 0,
+                                        min = 0,
+                                        step = 1000,
+                                        max = 150000
+                                        )
+                            )
+                      ),
+                      accordionItem(
+                        id = 54,
+                        title = "Desired Education Yearly Cost",
+                        color = "primary",
+                        collapsed = TRUE,
+                        div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-1em",
+                            sliderInput(inputId = "annual_ed_cost",
+                                        label = "Desired Tuition Level",
+                                        value = 100000,
+                                        min = 0,
+                                        step = 1000,
+                                        max = 100000
+                                        )
+                        ) 
+                      )
+                      )
+                    ))
               ),
               div(align = 'center', style = "font-size: 16px; padding-top: -10px; margin-top:0em", 
                   h2("Arrange the items below in order of"),
@@ -198,7 +207,8 @@ body <- dashboardBody(HTML('<meta name="viewport" content="width=1920">'),
                                           selectInput(
                                             inputId = "occupation_first",
                                             label = NULL,
-                                            choices = isolate(occupation$OCCNAME),
+                                            choices = '',
+                                            selected = '',
                                             selectize = FALSE,
                                             size = 8,
                                             width = '100%'
@@ -267,7 +277,8 @@ body <- dashboardBody(HTML('<meta name="viewport" content="width=1920">'),
                                           selectInput(
                                             inputId = "curriculum_first",
                                             label = NULL,
-                                            choices = isolate(cips$CIPNAME),
+                                            choices = '',
+                                            selected = '',
                                             selectize = FALSE,
                                             size = 8,
                                             width = '100%'
@@ -339,7 +350,8 @@ body <- dashboardBody(HTML('<meta name="viewport" content="width=1920">'),
                                           selectInput(
                                             inputId = "school_first",
                                             label = NULL,
-                                            choices = isolate(sort(school$INSTNM)),
+                                            choices = '',
+                                            selected = '',
                                             selectize = FALSE,
                                             size = 8,
                                             width = '100%'
@@ -409,7 +421,8 @@ body <- dashboardBody(HTML('<meta name="viewport" content="width=1920">'),
                                           selectInput(
                                             inputId = "degree_first",
                                             label = NULL,
-                                            choices = isolate(aw_degree$Degree_Name),
+                                            choices = '',
+                                            selected = '',
                                             selectize = FALSE,
                                             size = 8,
                                             width = '100%'
@@ -460,11 +473,11 @@ body <- dashboardBody(HTML('<meta name="viewport" content="width=1920">'),
                 )
                 )
               ),
-              
+              actionButton(inputId = "create_table", "Build Table"),
               fluidRow(column(width = 12,
                               
                               div(
-                                style = 'overflow-x: scroll', DT::dataTableOutput(outputId = "table")
+                                style = 'overflow-x: scroll', DT::dataTableOutput(outputId = "table",width = "100%", height = "auto")
                               )))
             )
     )
@@ -473,6 +486,69 @@ body <- dashboardBody(HTML('<meta name="viewport" content="width=1920">'),
 ui <- dashboardPagePlus(header, sidebar, body, skin = "blue")
 
 server <- function(input, output, session) {
+  state_abbr <- readRDS("state_abbr.rds")
+  cips <- readRDS("CIPS.rds")
+  alt_title <- readRDS("AltTitle.rds")
+  backbone <- readRDS("Backbone.rds")
+  school <- readRDS("Schools.rds")
+  school <- school %>% select("UNITID", "INSTNM", "STABBR", "State", "TOTALCOST")
+  occupation <- readRDS("Occupations.rds") 
+  occupation <- occupation %>% select("OCCNAME", "OCCCODE", "X17p")
+  ent_degree <- readRDS("Ent_Degree.rds")
+  aw_degree <- readRDS("AW_Degree.rds")
+  
+  school_list_filter <- c(character())
+  degree_list_filter <- c(character())
+  occupation_list_filter <- c(character())
+  curriculum_list_filter <- c(character())
+  
+  school_filter <- c(character())
+  degree_filter <- c(character())
+  occupation_filter <- c(character())
+  curriculum_filter <- c(character())
+  
+  observe({
+    #req(aw_degree)
+    updateSelectInput(
+      session,
+      inputId = "residence",
+      label = "State of Residence",
+      choices = c(None = '', sort(state_abbr$State)),
+      selected = ''
+    )
+    updateSelectInput(
+      session,
+        inputId = "state_filter",
+        label = "",
+        choices = c(None = '', sort(state_abbr$State)),
+      selected = ''
+    )
+    updateSelectInput(
+      session,
+      inputId = "required_degree",
+      label = "Required Degree",
+      choices = c(None = '', sort(ent_degree$Entry_Degree)),
+      selected = ''
+    )
+    updateSliderInput(
+      session,
+      inputId = "min_start_salary",
+      label = "Desired Income Level:",
+      value = min(sort(unique(occupation$X17p))),
+      min = min(sort(unique(occupation$X17p))),
+      step = 1000,
+      max = max(sort(unique(occupation$X17p)))
+    )
+    updateSliderInput(
+      session,
+      inputId = "annual_ed_cost",
+      label = "Desired Tuition Level",
+      value = max(sort(unique(school$TOTALCOST))),
+      min = min(sort(unique(school$TOTALCOST))),
+      step = 1000,
+      max = max(sort(unique(school$TOTALCOST)))
+    )
+  })
 
 school_table <- reactive({
   school_t1 <- school
@@ -534,6 +610,14 @@ observeEvent(input$curriculum_text,{
   
   table_var <- reactive ({
     backbone_temp <- backbone
+    if(!is.null(input$required_degree) & input$required_degree !='') {
+      required_temp1 <- filter(ent_degree, Entry_Degree %in% input$required_degree) %>% select(Entry_Code)
+      backbone_temp <- filter(backbone_temp, Entry_Code %in% required_temp1[,1])
+    }
+    if( input$state_filter !='') {
+      state_temp1 <- filter(school, State %in% input$state_filter) %>% select(UNITID)
+      backbone_temp <- filter(backbone_temp, UNITID %in% state_temp1[,1])
+    }
     if(!is.null(input$occupation_filtered) & input$occupation_filtered !='') {
       occupation_temp <- filter(occupation, OCCNAME %in% input$occupation_filtered) %>% select(OCCCODE)
       backbone_temp <- filter(backbone_temp, OCCCODE %in% occupation_temp)
@@ -550,17 +634,25 @@ observeEvent(input$curriculum_text,{
       degree_temp <- filter(aw_degree, Degree_Name %in% input$degree_filtered) %>% select(AWLEVEL)
       backbone_temp <- filter(backbone_temp, AWLEVEL %in% degree_temp)
     }
-    filtered_table <- left_join(backbone_temp, school, by = "UNITID")
-    filtered_table <- left_join(filtered_table, cips, by = "CIPCODE")
-    filtered_table <- left_join(filtered_table, aw_degree, by = "AWLEVEL")
-    filtered_table <- left_join(filtered_table, ent_degree, by = "Entry_Code")
-    filtered_table <- left_join(filtered_table, occupation, by = "OCCCODE")
-    filtered_table <- filtered_table %>% select("INSTNM", "CIPNAME", "Degree_Name", "OCCNAME",
-                                                "Entry_Degree", "MedWage")
-    school_filter <<- unique(filtered_table$INSTNM)
-    degree_filter <<- unique(filtered_table$Degree_Name)
-    occupation_filter <<- unique(filtered_table$OCCNAME)
-    curriculum_filter <<- unique(filtered_table$CIPNAME)
+    if(input$min_start_salary > 0){
+      start_salary_temp <- filter(occupation, X17p >= input$min_start_salary ) %>% select(OCCCODE)
+      backbone_temp <- filter(backbone_temp, OCCCODE %in% (start_salary_temp[[1]]))
+    }
+    if(input$annual_ed_cost >= 0){
+      annual_ed_temp <- filter(school, TOTALCOST <= input$annual_ed_cost ) %>% select(UNITID)
+      backbone_temp <- filter(backbone_temp, UNITID %in% annual_ed_temp[,1])
+    }
+    backbone_temp <- left_join(backbone_temp, school, by = "UNITID")
+    backbone_temp <- left_join(backbone_temp, cips, by = "CIPCODE")
+    backbone_temp <- left_join(backbone_temp, aw_degree, by = "AWLEVEL")
+    backbone_temp <- left_join(backbone_temp, ent_degree, by = "Entry_Code")
+    backbone_temp <- left_join(backbone_temp, occupation, by = "OCCCODE")
+    backbone_temp <- backbone_temp %>% select("UNITID", "INSTNM", "STABBR","CIPNAME", "Degree_Name", "OCCNAME",
+                                                "Entry_Degree", "X17p", "TOTALCOST")
+    school_filter <<- unique(backbone_temp$INSTNM)
+    degree_filter <<- unique(backbone_temp$Degree_Name)
+    occupation_filter <<- unique(backbone_temp$OCCNAME)
+    curriculum_filter <<- unique(backbone_temp$CIPNAME)
     if(identical(school_list_filter, character(0))){
       updateSelectInput(session, inputId = "school_filtered", label = "",
                         choices = isolate(c(All = '', sort(school_filter))), selected = '')
@@ -578,36 +670,55 @@ observeEvent(input$curriculum_text,{
                         choices = isolate(c(All = '', sort(degree_filter))), selected = '')
     }
     
-    filtered_table <- filtered_table %>% rename("Institution<br>Name" = "INSTNM",
+    backbone_temp <- backbone_temp %>% rename("Institution<br>Name" = "INSTNM", "State<br>Abbrv" = "STABBR",
                                                 "Curriculum<br>Name" = "CIPNAME", "Degree<br>Name" = "Degree_Name", 
-                                                "Occupation<br>Name" = "OCCNAME", "Median<br>Wage" = "MedWage",
+                                                "Occupation<br>Name" = "OCCNAME", "Start<br>Wage" = "X17p",
                                                 "Entry_Level<br>Degree" = "Entry_Degree")
   })
  
   
-  observe({
-    output$table <- renderDataTable({
-      DT::datatable(
-        data = table_var(),
-        escape = FALSE,
-        options = list(
-          filter = FALSE,
-          pageLength = 5,
-          autoWidth = TRUE,
-          lengthMenu = c(5, 10, 15, 30)
-        ),
-        selection = list(mode = 'single')
-      ) %>%
-        formatStyle(
-          0,
-          target = 'row',
-          color = 'black',
-          backgroundColor = 'grey',
-          fontWeight = 'bold',
-          lineHeight = '100%'
-        )
-    })
+observeEvent(input$create_table, {  
+  output$table <- renderDataTable({
+    DT::datatable(
+      data = table_var(),
+      extensions = 'Buttons',
+      escape = FALSE,
+      options = list(
+        saveState = TRUE,
+        filter = FALSE,
+        autoWidth = TRUE,
+        lengthMenu = c(12, 24, 36),
+        dom = 'Blfrtip',
+        buttons = list(# "copy",
+          list(
+            extend = "collection",
+            text = 'Select',
+            action = DT::JS(
+              "function ( e, dt, node, config ) {
+                                      Shiny.setInputValue('select', true, {priority: 'event'});
+                                   }"
+            )
+          ))
+      ),
+      selection = list(mode = 'single')
+    ) %>%
+      formatStyle(
+        0,
+        target = 'row',
+        color = 'black',
+        backgroundColor = 'grey',
+        fontWeight = 'bold',
+        lineHeight = '100%'
+      )
   })
+})
+  
+  observeEvent(input$select, {
+    print("hello")
+  })
+    
+    
+    
     observeEvent(input$next_welcome, {
       updateTabsetPanel(session, "tabs",selected = "page1")
     })
