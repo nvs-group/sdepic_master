@@ -17,6 +17,8 @@ library(shinyjqui)
 library(shinymanager)
 library(gmailr)
 library(shinyBS)
+library(V8)
+
 
 school_list <- c(character())
 degree_list <- c(character())
@@ -52,12 +54,10 @@ body <- dashboardBody(
 #                                                margin-top: -5px; margin-bottom: -10px;
 #                                                margin-left: -10px; margin-right: -10px; }; "))), 
   tabItems(
-    tabItem(tabName = "welcome", useShinyjs(),  extendShinyjs(text = jscode),
+    tabItem(tabName = "welcome", useShinyjs(), useShinyalert(),extendShinyjs(text = jscode),
             fluidPage(
               div(align = 'center', style = "font-size: 20px; padding-top: 0px; margin-top:1em",
                   h1("Welcome to your Personel EPIC Portal"))
-              
-              
               )
             ),
     tabItem(tabName = "page2",
@@ -490,12 +490,115 @@ body <- dashboardBody(
                 )
                 )
               ),
-              actionButton(inputId = "create_table", "Build Table"),
-              fluidRow(column(width = 12,
-                              
-                              div(
-                                style = 'overflow-x: scroll', DT::dataTableOutput(outputId = "table",width = "100%", height = "auto")
-                              )))
+              div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-1em", 
+                  h2("Step 3: Build Scenerios and Create list from choices above")
+                  ),
+              fluidRow(column(
+                width = 6,
+                div(
+                  align = 'center',
+                  style = "font-size: 16px; padding-top: 0px; margin-top:0px; margin-bottom: 0px",
+                  actionBttn(
+                    inputId = "create_table",
+                    "Build Table",
+                    style = "fill",
+                    color = "danger",
+                    size = "md"
+                  )
+                )
+              ),
+              column(
+                width = 6,
+                div(
+                  align = 'center',
+                  style = "font-size: 16px; padding-top: 0px; margin-top:0px; margin-bottom: 0px",
+                  
+                  actionBttn(
+                    inputId = "add_scenerio",
+                    "Add Scenerio",
+                    style = "fill",
+                    color = "success",
+                    size = "md"
+                  )
+                )
+              )), 
+              
+              fluidRow(
+                column(
+                  width = 12,
+                  
+                  div(style = 'overflow-x: scroll',
+                      DT::dataTableOutput(
+                        outputId = "table",
+                        width = "100%",
+                        height = "auto"
+                      )))
+              ),
+              div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-1em", 
+                  h2("Step 4: Select scenerios to compare")
+              ),
+              fluidRow(column(
+                width = 4,
+                div(
+                  align = 'center',
+                  style = "font-size: 16px; padding-top: 0px; margin-top:0px; margin-bottom: 0px",
+                  actionBttn(
+                    inputId = "load_scenerio",
+                    "Load Scenerios",
+                    style = "fill",
+                    color = "primary",
+                    size = "md"
+                  )
+                )
+              ),
+              column(
+                width = 4,
+                div(
+                  align = 'center',
+                  style = "font-size: 16px; padding-top: 0px; margin-top:0px; margin-bottom: 0px",
+                  
+                  actionBttn(
+                    inputId = "save_scenerio",
+                    "Save Scenerio",
+                    style = "fill",
+                    color = "success",
+                    size = "md"
+                  )
+                )
+              ),
+              column(
+                width = 4,
+                div(
+                  align = 'center',
+                  style = "font-size: 16px; padding-top: 0px; margin-top:0px; margin-bottom: 0px",
+                  
+                  actionBttn(
+                    inputId = "delete_scenerio",
+                    "Delete Scenerio",
+                    style = "fill",
+                    color = "danger",
+                    size = "md"
+                  )
+                )
+              )
+#              column(
+#                width = 3,
+#                div(
+#                  align = 'center',
+#                  style = "font-size: 16px; padding-top: 0px; margin-top:0px; margin-bottom: 0px",
+#                  numericInput(inputId = "num_years", label = "Number of Years",value = 25, min = 9, max = 50)
+#                ))
+              ),
+              fluidRow(
+                column(
+                  width = 12,
+                  div(style = 'overflow-x: scroll',
+                      DT::dataTableOutput(
+                        outputId = "scenerio",
+                        width = "100%",
+                        height = "auto"
+                      )))
+              )
             )
     )
   )
@@ -513,6 +616,9 @@ server <- function(input, output, session) {
   occupation <- occupation %>% select("OCCNAME", "OCCCODE", "X17p")
   ent_degree <- readRDS("Ent_Degree.rds")
   aw_degree <- readRDS("AW_Degree.rds")
+  
+  scenerio_table <- readRDS("Scenerio.rds")
+  b_placeholder_table <- readRDS("Scenerio.rds")
   
   school_list_filter <- c(character())
   degree_list_filter <- c(character())
@@ -686,11 +792,12 @@ observeEvent(input$curriculum_text,{
       updateSelectInput(session, inputId = "degree_filtered", label = "",
                         choices = isolate(c(All = '', sort(degree_filter))), selected = '')
     }
-    
+
     backbone_temp <- backbone_temp %>% rename("Institution<br>Name" = "INSTNM", "State<br>Abbrv" = "STABBR",
                                                 "Curriculum<br>Name" = "CIPNAME", "Degree<br>Name" = "Degree_Name", 
                                                 "Occupation<br>Name" = "OCCNAME", "Start<br>Wage" = "X17p",
                                                 "Entry_Level<br>Degree" = "Entry_Degree")
+ 
   })
  
   
@@ -698,25 +805,13 @@ observeEvent(input$create_table, {
   output$table <- renderDataTable({
     DT::datatable(
       data = table_var(),
-      extensions = 'Buttons',
       escape = FALSE,
       rownames = FALSE,
       options = list(
         saveState = TRUE,
         filter = FALSE,
         autoWidth = TRUE,
-        lengthMenu = c(12, 24, 36),
-        dom = 'Blfrtip',
-        buttons = list(
-          list(
-            extend = "collection",
-            text = 'Save<br>Scenerio',
-            action = DT::JS(
-              "function ( e, dt, node, config ) {
-                                      Shiny.setInputValue('select', true, {priority: 'event'});
-                                   }"
-            )
-          ))
+        lengthMenu = c(12, 24, 36)
       ),
       selection = list(mode = 'single')
     ) %>%
@@ -731,11 +826,67 @@ observeEvent(input$create_table, {
   })
 })
   
-  observeEvent(input$select, {
-    print("hello")
-  })
-    
-    
+#Add button 
+observeEvent(input$add_scenerio, {
+  req(input$table_rows_selected)
+  scenerio_to_add <- table_var()[input$table_rows_selected,]
+  scenerio_table <<- rbind(scenerio_table, scenerio_to_add)
+  row.names(scenerio_table) <<- 1:nrow(scenerio_table)
+})
+#Delete Button  
+observeEvent(input$delete_scenerio, {
+  if(length(input$scenerio_rows_selected)>= 1){
+    scenerio_table <<- scenerio_table[-input$scenerio_rows_selected,]
+    if(nrow(scenerio_table)>= 1){
+      row.names(scenerio_table) <<- 1:nrow(scenerio_table)}
+  }
+})
+#Save scenerio
+observeEvent(input$save_scenerio,{
+  filename <- ("test.rds")
+  saveRDS(scenerio_table, filename)
+  #  drop_upload(filename, path = "responses")
+  shinyalert(title = "Saved!", type = "success")
+})
+#Load scenerio
+observeEvent(input$load_scenerio, {
+  filename2 <- ("test.rds")
+  if(file.exists(filename2) == FALSE) {
+    shinyalert(title = "File Not Found", type = "error")
+  } else {
+    #      filename2 <- paste0("responses", filename)
+    #    drop_download(filename2, overwrite = TRUE)
+    filename <- ("test.rds")
+    scenerio_table <<- readRDS(filename)
+    shinyalert(title = "Loaded", type = "success")
+  } 
+})
+observe ( {
+  req(input$add_scenerio | input$delete_scenerio | input$load_scenerio)
+  output$scenerio <- renderDataTable({
+    DT::datatable(
+      data = scenerio_table,
+      escape = FALSE,
+      rownames = TRUE,
+      options = list(
+        saveState = TRUE,
+        filter = FALSE,
+        autoWidth = TRUE,
+        lengthMenu = c(10, 24, 36)
+      ),
+      selection = list(mode = 'single')
+    ) %>%
+      formatStyle(
+        0,
+        target = 'row',
+        color = 'black',
+        backgroundColor = 'grey',
+        fontWeight = 'bold',
+        lineHeight = '100%'
+      )
+  })  
+})    
+  
     
     observeEvent(input$next_welcome, {
       updateTabsetPanel(session, "tabs",selected = "page1")
