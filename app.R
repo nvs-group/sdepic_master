@@ -23,6 +23,11 @@ degree_list <- c(character())
 occupation_list <- c(character())
 curriculum_list <- c(character())
 
+jscode <- "
+shinyjs.collapse = function(boxid) {
+$('#' + boxid).closest('.box').find('[data-widget=collapse]').click();
+}
+"
 
 
 header <- dashboardHeader( title = "E.P.I.C. Planning", titleWidth = 230, uiOutput("logoutbtn"))
@@ -47,7 +52,7 @@ body <- dashboardBody(
 #                                                margin-top: -5px; margin-bottom: -10px;
 #                                                margin-left: -10px; margin-right: -10px; }; "))), 
   tabItems(
-    tabItem(tabName = "welcome", useShinyjs(),
+    tabItem(tabName = "welcome", useShinyjs(),  extendShinyjs(text = jscode),
             fluidPage(
               div(align = 'center', style = "font-size: 20px; padding-top: 0px; margin-top:1em",
                   h1("Welcome to your Personel EPIC Portal"))
@@ -81,12 +86,14 @@ body <- dashboardBody(
     tabItem(tabName = "page1",
             fluidPage( 
               div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-2em", 
-                  h2("Let's Get Started"),
-                  h2("Step 2: Fill in preferences if you have them (3 min)")),
+                  h2("Let's Get Started")),
+              div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-1em", 
+                  h2("Step 1: Fill in preferences if you have them (3 min)")),
               fluidRow(
                 column(
                   id = '5',
                   width = 3,
+                  div( style = "font-size: 16px; margin-left:-20px;margin-right:-20px; margin-top:0em",
                   boxPlus(
                     title = "State Tuition Salary",
                     width = 12,
@@ -102,7 +109,7 @@ body <- dashboardBody(
                         title = "State of Residence",
                         color = "primary",
                         collapsed = TRUE,
-                        div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-1em",
+                        div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-2em",
                             selectInput(
                               inputId = "residence",
                               label = "State of Residence",
@@ -118,7 +125,7 @@ body <- dashboardBody(
                         title = "State of Interest",
                         color = "primary",
                         collapsed = TRUE,
-                        div( style = "font-size: 16px; padding-top: 0px; margin-top:-1em",
+                        div( style = "font-size: 16px; padding-top: 0px; margin-top:-2em",
                             selectInput(
                               inputId = "state_filter",
                               label = "",
@@ -134,7 +141,7 @@ body <- dashboardBody(
                         title = "Required Entry Degree",
                         color = "primary",
                         collapsed = TRUE,
-                        div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-1em",
+                        div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-2em",
                             selectInput(
                               inputId = "required_degree",
                               label = "Required Degree",
@@ -150,7 +157,7 @@ body <- dashboardBody(
                         title = "Minimum Starting Salary",
                         color = "primary",
                         collapsed = TRUE,
-                        div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-1em",
+                        div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-2em",
                             sliderInput(inputId = "min_start_salary",
                                         label = "Desired Income Level:",
                                         value = 0,
@@ -165,7 +172,7 @@ body <- dashboardBody(
                         title = "Desired Education Yearly Cost",
                         color = "primary",
                         collapsed = TRUE,
-                        div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-1em",
+                        div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-2em",
                             sliderInput(inputId = "annual_ed_cost",
                                         label = "Desired Tuition Level",
                                         value = 100000,
@@ -176,18 +183,22 @@ body <- dashboardBody(
                         ) 
                       )
                       )
-                    ))
+                    )))
               ),
-              div(align = 'center', style = "font-size: 16px; padding-top: -10px; margin-top:0em", 
-                  h2("Arrange the items below in order of"),
-                  h2("importance and certainty (3 min)")
+              div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-1em", 
+                  h2("Step 2: Arrange the items below in order of importance and certainty (3 min)")),
+              div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-bottom: 1em",
+                  actionBttn(inputId = "min_max_button", "Open/Close All", style = "fill", color = "primary", size = "sm")
                   ),
+                  
               fluidRow(
                 jqui_sortable(div(id = 'choices',
                                   column(
                                     id = '1',
                                     width = 3,
+                                    div( style = "font-size: 16px; margin-left:-20px;margin-right:-20px; margin-top:0em",
                                     boxPlus(
+                                      id = "box1",
                                       title = "Occupation",
                                       width = 12,
                                       solidHeader = TRUE,
@@ -252,12 +263,14 @@ body <- dashboardBody(
                                               ))
                                         )
                                         )
-                                      )
+                                      ))
                                     ),
                                   column(
                                     id = '2',
                                     width = 3,
+                                    div( style = "font-size: 16px; margin-left:-20px;margin-right:-20px; margin-top:0em",
                                     boxPlus(
+                                      id = "box2",
                                       title = "Curriculum",
                                       width = 12,
                                       solidHeader = TRUE,
@@ -324,13 +337,15 @@ body <- dashboardBody(
                                           )
                                       )
                                     )
-                                    )
+                                    ))
                                   )
                                   , 
                                   column(
                                     id = '3',
                                     width = 3,
+                                    div( style = "font-size: 16px; margin-left:-20px;margin-right:-20px; margin-top:0em",
                                     boxPlus(
+                                      id = "box3",
                                       title = "School",
                                       width = 12,
                                       solidHeader = TRUE,
@@ -395,12 +410,14 @@ body <- dashboardBody(
                                               ))
                                         )
                                       )
-                                    )
+                                    ))
                                   ), 
                                   column(
                                     id = '4',
                                     width = 3,
+                                    div( style = "font-size: 16px; margin-left:-20px;margin-right:-20px; margin-top:0em",
                                     boxPlus(
+                                      id = "box4",
                                       title = "Degree",
                                       width = 12,
                                       solidHeader = TRUE,
@@ -466,7 +483,7 @@ body <- dashboardBody(
                                               ))
                                         )
                                       )
-                                    )
+                                    ))
                                     
                                   )
                                   
@@ -513,21 +530,21 @@ server <- function(input, output, session) {
       session,
       inputId = "residence",
       label = "State of Residence",
-      choices = c(None = '', sort(state_abbr$State)),
+      choices = c(Any = '', sort(state_abbr$State)),
       selected = ''
     )
     updateSelectInput(
       session,
         inputId = "state_filter",
         label = "",
-        choices = c(None = '', sort(state_abbr$State)),
+        choices = c(Any = '', sort(state_abbr$State)),
       selected = ''
     )
     updateSelectInput(
       session,
       inputId = "required_degree",
       label = "Required Degree",
-      choices = c(None = '', sort(ent_degree$Entry_Degree)),
+      choices = c(Any = '', sort(ent_degree$Entry_Degree)),
       selected = ''
     )
     updateSliderInput(
@@ -647,7 +664,7 @@ observeEvent(input$curriculum_text,{
     backbone_temp <- left_join(backbone_temp, aw_degree, by = "AWLEVEL")
     backbone_temp <- left_join(backbone_temp, ent_degree, by = "Entry_Code")
     backbone_temp <- left_join(backbone_temp, occupation, by = "OCCCODE")
-    backbone_temp <- backbone_temp %>% select("UNITID", "INSTNM", "STABBR","CIPNAME", "Degree_Name", "OCCNAME",
+    backbone_temp <- backbone_temp %>% select( "INSTNM", "STABBR","CIPNAME", "Degree_Name", "OCCNAME",
                                                 "Entry_Degree", "X17p", "TOTALCOST")
     school_filter <<- unique(backbone_temp$INSTNM)
     degree_filter <<- unique(backbone_temp$Degree_Name)
@@ -683,16 +700,17 @@ observeEvent(input$create_table, {
       data = table_var(),
       extensions = 'Buttons',
       escape = FALSE,
+      rownames = FALSE,
       options = list(
         saveState = TRUE,
         filter = FALSE,
         autoWidth = TRUE,
         lengthMenu = c(12, 24, 36),
         dom = 'Blfrtip',
-        buttons = list(# "copy",
+        buttons = list(
           list(
             extend = "collection",
-            text = 'Select',
+            text = 'Save<br>Scenerio',
             action = DT::JS(
               "function ( e, dt, node, config ) {
                                       Shiny.setInputValue('select', true, {priority: 'event'});
@@ -1019,6 +1037,12 @@ observeEvent(input$create_table, {
                           choices = isolate(c(None = '', curriculum_list)),
                           selected = '')
       }
+    })
+    observeEvent(input$min_max_button,{
+      js$collapse("box1")
+      js$collapse("box2")
+      js$collapse("box3")
+      js$collapse("box4")
     })
 }
 
