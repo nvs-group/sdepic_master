@@ -18,7 +18,7 @@ library(shinymanager)
 library(gmailr)
 library(shinyBS)
 library(V8)
-
+library(xlsx)
 
 school_list <- c(character())
 degree_list <- c(character())
@@ -46,7 +46,7 @@ sidebar <- dashboardSidebar(
   )
 ) 
 body <- dashboardBody(
-                    #  tags$script(HTML("$('body').addClass('fixed');")),
+                      tags$script(HTML("$('body').addClass('fixed');")),
                    # tags$script (src="http://code.jquery.com/jquery-1.7.2.min.js"),
                    # tags$script (src="http://code.jquery.com/ui/1.8.21/jquery-ui.min.js"),
                       tags$script(src = "jquery.ui.touch-punch.js"),
@@ -495,6 +495,7 @@ body <- dashboardBody(
                   ),
               fluidRow(column(
                 width = 6,
+                
                 div(
                   align = 'center',
                   style = "font-size: 16px; padding-top: 0px; margin-top:0px; margin-bottom: 0px",
@@ -526,13 +527,22 @@ body <- dashboardBody(
               fluidRow(
                 column(
                   width = 12,
-                  
+                  div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:1em", 
+                  boxPlus(
+                    id = "box5",
+                    title = "Table",
+                    width = 12,
+                    solidHeader = TRUE,
+                    background = 'light-blue',
+                    collapsible = TRUE,
+                    collapsed = FALSE,
+                    closable = FALSE,
                   div(style = 'overflow-x: scroll',
                       DT::dataTableOutput(
                         outputId = "table",
                         width = "100%",
                         height = "auto"
-                      )))
+                      )))))
               ),
               div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:-1em", 
                   h2("Step 4: Select scenerios to compare")
@@ -581,25 +591,91 @@ body <- dashboardBody(
                   )
                 )
               )
-#              column(
-#                width = 3,
-#                div(
-#                  align = 'center',
-#                  style = "font-size: 16px; padding-top: 0px; margin-top:0px; margin-bottom: 0px",
-#                  numericInput(inputId = "num_years", label = "Number of Years",value = 25, min = 9, max = 50)
-#                ))
+
               ),
               fluidRow(
                 column(
                   width = 12,
+                  div(align = 'center', style = "font-size: 16px; padding-top: 0px; margin-top:1em", 
+                      boxPlus(
+                        id = "box6",
+                        title = "Scenerios",
+                        width = 12,
+                        solidHeader = TRUE,
+                        #background = 'olive',
+                        collapsible = TRUE,
+                        collapsed = FALSE,
+                        closable = FALSE,
                   div(style = 'overflow-x: scroll',
                       DT::dataTableOutput(
                         outputId = "scenerio",
                         width = "100%",
                         height = "auto"
-                      )))
+                      )))))
+              ),
+              fluidRow(column(
+                width = 6, 
+                div(
+                  align = 'center',
+                  style = "font-size: 16px; padding-top: 0px; margin-top:20px; margin-bottom: 0px",
+                  actionBttn(
+                    inputId = "show_graphs",
+                    "Show Graphs",
+                    style = "fill",
+                    color = "primary",
+                    size = "md"
+                  )
+                )
+              ),
+              column(
+                width = 6,
+                div(
+                  align = 'center',
+                  style = "font-size: 16px; padding-bottom: 0px; margin-top:0px; margin-bottom: 0px",
+                  numericInput(
+                    inputId = "num_years",
+                    label = "Number of Years",
+                    value = 25,
+                    min = 9,
+                    max = 50
+                  )
+                )
+              )),
+              
+              fluidRow(
+                column(
+                  width = 12,
+                  div(align = 'center', style = "font-size: 16px; padding-top: 0px;margin-bottom:0em;
+                      margin-top:1em", 
+                      boxPlus(
+                        id = "box7",
+                        title = "Graph",
+                        width = 6,
+                        height = '700px',
+                        solidHeader = TRUE,
+                        #background = 'olive',
+                        collapsible = TRUE,
+                        collapsed = FALSE,
+                        closable = FALSE,
+                        plotOutput("cummulative.plot")
+                        )),
+                  div(align = 'center', style = "font-size: 16px; padding-top: 0px;margin-bottom:2em;
+                      margin-top:1em", 
+                      boxPlus(
+                        id = "box8",
+                        title = "ROI",
+                        width = 6,
+                        height = '700px',
+                        solidHeader = TRUE,
+                        #background = 'olive',
+                        collapsible = TRUE,
+                        collapsed = FALSE,
+                        closable = FALSE,
+                        plotOutput("roi.plot")
+                      ))
+                  )),
+              fluidRow()
               )
-            )
     )
   )
 )
@@ -610,16 +686,21 @@ server <- function(input, output, session) {
   cips <- readRDS("CIPS.rds")
   alt_title <- readRDS("AltTitle.rds")
   backbone <- readRDS("Backbone.rds")
-  school <- readRDS("Schools.rds")
-  school <- school %>% select("UNITID", "INSTNM", "STABBR", "State", "TOTALCOST")
-  occupation <- readRDS("Occupations.rds") 
-  occupation <- occupation %>% select("OCCNAME", "OCCCODE", "X17p")
+  school_master <- readRDS("Schools.rds")
+  school <- school_master %>% select("UNITID", "INSTNM", "STABBR", "TotCstInHi")
+  school_graph <- school
+  occupation_master <- readRDS("Occupations.rds") 
+  occupation <- occupation_master %>% select("OCCNAME", "OCCCODE", "X17p")
+  occupation_graph <- occupation_master %>% select("OCCNAME", "OCCCODE", "X10p", "X17p", "X25p","LowLate",
+                                                   "MedLate", "HiLate", "LowOccF", "MedOccF", "HiOccF")
   ent_degree <- readRDS("Ent_Degree.rds")
   aw_degree <- readRDS("AW_Degree.rds")
-  
+
   scenerio_table <- readRDS("Scenerio.rds")
   b_placeholder_table <- readRDS("Scenerio.rds")
-  
+  graph_table <- data.frame("index" = numeric(), "school" = character(), "curriculum" = character(),
+                            "occupation" = character(), "flow" = character(), "yearly_change" = numeric(),
+                            "running_total" = numeric(), stringsAsFactors = FALSE)
   school_list_filter <- c(character())
   degree_list_filter <- c(character())
   occupation_list_filter <- c(character())
@@ -629,7 +710,17 @@ server <- function(input, output, session) {
   degree_filter <- c(character())
   occupation_filter <- c(character())
   curriculum_filter <- c(character())
+#saveRDS(backbone, "Backbone.rds")
+#  bls <- read.xlsx("blsnces2018.xlsx", sheetIndex =  1)
+#  bls$soc2018 <- bls$soc2010
+#  backbone$OCCCODE[backbone$OCCCODE == "53-1031"]  <- "53-1048"
+#  backbone <- left_join(backbone, ent_degree, by = "Entry_Degree")
+#  occ2 <- occupation %>% select("OCCNAME", "OCCCODE")
+#  occ2 <- occ2 %>% rename("soc2018" = "OCCCODE", "soc2018ttl" = "OCCNAME")
+#  bls <- left_join(bls, occ2, by = "soc2018")
+#  write.xlsx(bls,"blsnces2018.xlsx",sheetName = "Sheet1",col.names = TRUE,row.names = TRUE,append = FALSE,showNA = TRUE,password = NULL)
   
+#  saveRDS(alt_title, "AltTitle.rds")
   observe({
     #req(aw_degree)
     updateSelectInput(
@@ -666,10 +757,10 @@ server <- function(input, output, session) {
       session,
       inputId = "annual_ed_cost",
       label = "Desired Tuition Level",
-      value = max(sort(unique(school$TOTALCOST))),
-      min = min(sort(unique(school$TOTALCOST))),
+      value = max(sort(unique(school$TotCstInHi))),
+      min = min(sort(unique(school$TotCstInHi))),
       step = 1000,
-      max = max(sort(unique(school$TOTALCOST)))
+      max = max(sort(unique(school$TotCstInHi)))
     )
   })
 
@@ -735,10 +826,11 @@ observeEvent(input$curriculum_text,{
     backbone_temp <- backbone
     if(!is.null(input$required_degree) & input$required_degree !='') {
       required_temp1 <- filter(ent_degree, Entry_Degree %in% input$required_degree) %>% select(Entry_Code)
-      backbone_temp <- filter(backbone_temp, Entry_Code %in% required_temp1[,1])
+      backbone_temp <- filter(backbone_temp, Entry_Code %in% required_temp1[1,])
     }
     if( input$state_filter !='') {
-      state_temp1 <- filter(school, State %in% input$state_filter) %>% select(UNITID)
+      state_temp <- filter(state_abbr, State %in% input$state_filter) %>% select(STABBR)
+      state_temp1 <- filter(school, STABBR %in% state_temp) %>% select(UNITID)
       backbone_temp <- filter(backbone_temp, UNITID %in% state_temp1[,1])
     }
     if(!is.null(input$occupation_filtered) & input$occupation_filtered !='') {
@@ -762,7 +854,7 @@ observeEvent(input$curriculum_text,{
       backbone_temp <- filter(backbone_temp, OCCCODE %in% (start_salary_temp[[1]]))
     }
     if(input$annual_ed_cost >= 0){
-      annual_ed_temp <- filter(school, TOTALCOST <= input$annual_ed_cost ) %>% select(UNITID)
+      annual_ed_temp <- filter(school, TotCstInHi <= input$annual_ed_cost ) %>% select(UNITID)
       backbone_temp <- filter(backbone_temp, UNITID %in% annual_ed_temp[,1])
     }
     backbone_temp <- left_join(backbone_temp, school, by = "UNITID")
@@ -771,7 +863,8 @@ observeEvent(input$curriculum_text,{
     backbone_temp <- left_join(backbone_temp, ent_degree, by = "Entry_Code")
     backbone_temp <- left_join(backbone_temp, occupation, by = "OCCCODE")
     backbone_temp <- backbone_temp %>% select( "INSTNM", "STABBR","CIPNAME", "Degree_Name", "OCCNAME",
-                                                "Entry_Degree", "X17p", "TOTALCOST")
+                                                "Entry_Degree", "X17p", "TotCstInHi", "UNITID", "CIPCODE",
+                                               "OCCCODE", "Entry_Code", "AWLEVEL")
     school_filter <<- unique(backbone_temp$INSTNM)
     degree_filter <<- unique(backbone_temp$Degree_Name)
     occupation_filter <<- unique(backbone_temp$OCCNAME)
@@ -790,16 +883,15 @@ observeEvent(input$curriculum_text,{
     }
     if(identical(degree_list_filter, character(0))){
       updateSelectInput(session, inputId = "degree_filtered", label = "",
-                        choices = isolate(c(All = '', sort(degree_filter))), selected = '')
-    }
+                        choices = isolate(c(All = '', sort(degree_filter))), selected = '')    }
 
+#    write.csv(backbone_temp, "B2.csv")
     backbone_temp <- backbone_temp %>% rename("Institution<br>Name" = "INSTNM", "State<br>Abbrv" = "STABBR",
                                                 "Curriculum<br>Name" = "CIPNAME", "Degree<br>Name" = "Degree_Name", 
                                                 "Occupation<br>Name" = "OCCNAME", "Start<br>Wage" = "X17p",
-                                                "Entry_Level<br>Degree" = "Entry_Degree")
- 
+                                                "Entry_Level<br>Degree" = "Entry_Degree",
+                                                "Yearly<br>Cost<br>Instate" ="TotCstInHi")
   })
- 
   
 observeEvent(input$create_table, {  
   output$table <- renderDataTable({
@@ -807,10 +899,14 @@ observeEvent(input$create_table, {
       data = table_var(),
       escape = FALSE,
       rownames = FALSE,
+      class="compact cell-border",
       options = list(
         saveState = TRUE,
         filter = FALSE,
         autoWidth = TRUE,
+        columnDefs = (list(list(width = '265px', targets =c(0, 2,3,4,5)), list(width = '25px', targets =c(1)),
+                           list(width = '55px', targets = c(6,7)),
+                           list(visible=FALSE, targets=c(8,9,10,11,12)))),
         lengthMenu = c(12, 24, 36)
       ),
       selection = list(mode = 'single')
@@ -867,14 +963,17 @@ observe ( {
     DT::datatable(
       data = scenerio_table,
       escape = FALSE,
-      rownames = TRUE,
+      rownames = FALSE,
+      class="compact cell-border",
       options = list(
         saveState = TRUE,
         filter = FALSE,
         autoWidth = TRUE,
+        columnDefs = (list(list(width = '265px', targets =c(0,2,3,4,5)), list(width = '25px', targets =c(1)),
+                           list(width = '55px', targets = c(6,7)), list(visible=FALSE, targets=c(8,9,10,11,12)))),
         lengthMenu = c(10, 24, 36)
       ),
-      selection = list(mode = 'single')
+      selection = list(mode = 'multiple')
     ) %>%
       formatStyle(
         0,
@@ -1195,6 +1294,105 @@ observe ( {
       js$collapse("box3")
       js$collapse("box4")
     })
+    observeEvent(input$show_graphs, {
+      req(input$scenerio_rows_selected)
+      graph_backbone <- scenerio_table[input$scenerio_rows_selected,]
+      row.names(graph_backbone) <- 1:nrow(graph_backbone)
+      graph_backbone <- graph_backbone %>% rename("INSTNM" = "Institution<br>Name", "STABBR" = "State<br>Abbrv",
+                                    "CIPNAME" = "Curriculum<br>Name", "Degree_Name" = "Degree<br>Name", 
+                                    "OCCNAME" = "Occupation<br>Name", "X17p" = "Start<br>Wage",
+                                    "Entry_Degree" = "Entry_Level<br>Degree",
+                                     "TotCstInHi" = "Yearly<br>Cost<br>Instate")
+      
+
+      graph_occupation <-
+        occupation_master %>% select(
+          "OCCCODE",
+          "X10p",
+          "X25p",
+          "LowLate",
+          "MedLate",
+          "HiLate",
+          "LowOccF",
+          "MedOccF",
+          "HiOccF"
+        )
+      graph_backbone <-
+        left_join(graph_backbone, graph_occupation, by = "OCCCODE")
+      graph_degree <- aw_degree %>% select("AWLEVEL", "Years")
+      graph_backbone <-
+        left_join(graph_backbone, graph_degree, by = "AWLEVEL")
+#graph parameters
+      graph_parameters <<- ggplot() + 
+        xlab('Years') +
+        ylab('Total Earnings in Thousands') +
+        labs(title = 'Cummulative Cash Flow') +
+        theme(plot.title = element_text(hjust = 0.5)) +
+ #       theme(legend.position="bottom") +
+        theme(legend.direction = "vertical", legend.position = c(0.16,0.76))
+ #     theme(legend.position = c(0.8, 0.2))
+#      print(graph_backbone)
+      roi_parameters <- ggplot() 
+        
+#Beginning Loop
+      graph_scenerio <- data.frame("Years" = numeric(), "Scenerio" = character(),
+                                   "Running_Total" = numeric())
+      graph_roi <- data.frame("Scenerio" = character(), "ROI" = numeric()) 
+      for(j in(1:nrow(graph_backbone))){
+        years <- 0
+        running_total <- 0
+        TTuition <- 0
+        TIncome <- 0
+        if(graph_backbone$Years[j] != 0){
+        for(i in(1:graph_backbone$Years[j])){
+          scenerio <- paste0(graph_backbone$OCCNAME[j],"\n",graph_backbone$INSTNM[j],"\n")
+          years <- years + 1
+          running_total <- running_total - graph_backbone$TotCstInHi[j]
+          running_total <- round(running_total, digits = 0)
+          graph_temp <- data.frame("Years" = years, "Scenerio" = scenerio,
+                                   "Running_Total" = running_total)
+          graph_scenerio <- rbind(graph_scenerio, graph_temp)
+        }
+          TTuition <- (-running_total)
+        }
+        years <- years + 1
+        year_change <- graph_backbone$X17p[j]
+        running_total <- running_total + year_change
+        TIncome <- TIncome + year_change
+        graph_temp <- data.frame("Years" = years, "Scenerio" = scenerio,
+                                 "Running_Total" = running_total)
+        graph_scenerio <- rbind(graph_scenerio, graph_temp)
+        for(k in(1:(input$num_years - years))){
+          years <- years + 1
+          tf <- (1 + ((0.00002 * ((k) ^ 2)) - 0.0023 * (k) + 0.0603))
+          year_change <- year_change * tf * graph_backbone$MedOccF[j]
+          TIncome <- TIncome + year_change
+          TIncome <- round(TIncome, digits = 0)
+          running_total <- running_total + year_change
+          running_total <- round(running_total, digits = 0)
+          graph_temp <- data.frame("Years" = years, "Scenerio" = scenerio,
+                                   "Running_Total" = running_total)
+          graph_scenerio <- rbind(graph_scenerio, graph_temp)
+        }
+        
+        roi_temp <- data.frame("Scenerio" = scenerio, "ROI" = (TIncome/TTuition))
+        graph_roi <- rbind(graph_roi, roi_temp)
+        roi_parameters <- roi_parameters + geom_col(data = graph_roi, aes(x = Scenerio, y = ROI))
+        
+        graph_scene <- graph_scenerio %>% filter(Scenerio == scenerio)
+        graph_parameters <- graph_parameters + geom_line(data = graph_scene, aes(x = Years, y = Running_Total/1000, colour = Scenerio), show.legend = TRUE)
+      }
+      output$roi.plot <- renderPlot(height = 650,{
+        roi_parameters
+      })
+      output$cummulative.plot <- renderPlot(height = 650,{
+        graph_parameters
+      })
+      print(graph_scenerio)
+      print(graph_roi)
+    })
+    
+    
 }
 
 shinyApp(ui, server)
